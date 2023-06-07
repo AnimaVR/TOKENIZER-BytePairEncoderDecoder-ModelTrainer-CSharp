@@ -14,7 +14,7 @@ namespace BytePairEncoding
         }
         private async void startButton_Click(object sender, RoutedEventArgs e)
         {
-            await bpe.TrainAsync("input.txt", 5, 1);
+            await bpe.TrainAsync("input.txt", 1, 1);
             vocabSizeTextBlock.Text = "Vocabulary size: " + bpe.GetVocabSize().ToString();
            
         }
