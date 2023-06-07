@@ -8,17 +8,18 @@
         Title="MainWindow" Height="450" Width="800">
     <Grid>
         <Button x:Name="startButton" Content="Start Training" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="200" Click="startButton_Click"/>
-        <TextBlock x:Name="vocabSizeTextBlock" HorizontalAlignment="Left" Margin="10,50,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top"/>
-        <TextBlock x:Name="mergePairsTextBlock" HorizontalAlignment="Left" Margin="10,100,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top"/>
-        <TextBlock x:Name="tokensAndIdsTextBlock" HorizontalAlignment="Left" Margin="10,150,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top"/>
+        <TextBlock x:Name="vocabSizeTextBlock" Margin="10,0,421,95" TextWrapping="Wrap" Text="" Height="35" VerticalAlignment="Bottom"/>
+        <TextBlock x:Name="mergePairsTextBlock" Margin="10,0,421,135" TextWrapping="Wrap" Text="" Height="50" VerticalAlignment="Bottom"/>
+        <TextBlock x:Name="tokensAndIdsTextBlock" Margin="10,0,421,0" TextWrapping="Wrap" Text="" VerticalAlignment="Center" Height="50"/>
         <TextBlock x:Name="pairCountsTextBlock" HorizontalAlignment="Left" Margin="10,200,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top"/>
-        <Button x:Name="decodeButton" Content="Decode" HorizontalAlignment="Center" Margin="0,257,0,0" VerticalAlignment="Top" Width="100" Click="decodeButton_Click"/>
-        <TextBlock x:Name="decodedTextBlock" HorizontalAlignment="Left" Margin="10,0,0,30" TextWrapping="Wrap" Text="" Width="491" Height="38" VerticalAlignment="Bottom"/>
-        <TextBox x:Name="inputTextBox" Margin="0,222,46,0" TextWrapping="Wrap" Text="" Height="30" VerticalAlignment="Top" HorizontalAlignment="Right" Width="300"/>
-        <Button x:Name="encodeButton" Content="Encode" HorizontalAlignment="Center" Margin="0,227,0,0" VerticalAlignment="Top" Width="100" Click="encodeButton_Click"/>
-        <TextBlock x:Name="encodedTextBlock" HorizontalAlignment="Left" Margin="10,0,0,73" TextWrapping="Wrap" Text="" Width="491" Height="31" VerticalAlignment="Bottom"/>
-        <TextBlock x:Name="trainBinTextBlock" Margin="0,45,46,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Height="172" HorizontalAlignment="Right" Width="404"/>
+        <Button x:Name="decodeButton" Content="Decode" HorizontalAlignment="Left" Margin="10,0,0,48" Width="111" Click="decodeButton_Click" Height="30" VerticalAlignment="Bottom"/>
+        <TextBlock x:Name="decodedTextBlock" Margin="445,0,10,45" TextWrapping="Wrap" Text="" Height="33" VerticalAlignment="Bottom" Foreground="#FFFDFDFD" Background="#FF313131"/>
+        <TextBox x:Name="inputTextBox" Margin="126,0,10,10" TextWrapping="Wrap" Text="" Height="30" VerticalAlignment="Bottom"/>
+        <Button x:Name="encodeButton" Content="Encode" Margin="10,0,0,10" Click="encodeButton_Click" Height="29" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="111"/>
+        <TextBlock x:Name="encodedTextBlock" Margin="126,0,0,45" TextWrapping="Wrap" Text="" Height="33" VerticalAlignment="Bottom" Foreground="White" Background="Black" HorizontalAlignment="Left" Width="319"/>
+        <TextBlock x:Name="trainBinTextBlock" Margin="471,44,10,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Height="295" Background="Black" Foreground="White"/>
         <Button x:Name="LoadModelButton" Content="Load Model" HorizontalAlignment="Left" Margin="215,10,0,0" VerticalAlignment="Top" Width="100" Click="LoadModelButton_Click"/>
+        <Button x:Name="CreateTrainValBins" Content="TokenizeNMakeBins" HorizontalAlignment="Left" Margin="471,10,0,0" VerticalAlignment="Top" Width="319" Click="TokenizeData_Click"/>
 
     </Grid>
 </Window>
