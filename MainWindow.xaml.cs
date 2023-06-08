@@ -1,11 +1,13 @@
 ﻿using System.Linq;
 using System.IO;
 using System.Windows;
+using System;
 
 namespace BytePairEncoding
 {
     public partial class MainWindow : Window
     {
+        private int[] encodedIds;
         BPE bpe;
         public MainWindow()
         {
@@ -21,15 +23,26 @@ namespace BytePairEncoding
         private void encodeButton_Click(object sender, RoutedEventArgs e)
         {
             string inputText = inputTextBox.Text;
-            string encodedText = bpe.Encode(inputText);
-            encodedTextBlock.Text = "Encoded Text: " + encodedText;
+            encodedIds = bpe.Encode(inputText);
+            string encodedText = string.Join(" ", encodedIds);
+            encodedTextBlock.Text = encodedText;
         }
+
         private void decodeButton_Click(object sender, RoutedEventArgs e)
         {
-            string encodedText = encodedTextBlock.Text;
-            string decodedText = bpe.Decode(encodedText);
-            decodedTextBlock.Text = "Decoded Text: " + decodedText;
+            if (encodedIds != null)
+            {
+                string decodedText = bpe.Decode(encodedIds);
+                decodedTextBlock.Text = decodedText;
+            }
+            else
+            {
+                // Handle the case when no encoded IDs are available
+                decodedTextBlock.Text = "No encoded text to decode.";
+            }
         }
+
+
         private void LoadModelButton_Click(object sender, RoutedEventArgs e)
         {
             string modelPath = "model.json";
@@ -48,7 +61,36 @@ namespace BytePairEncoding
             string text = File.ReadAllText("input.txt");
             int[] trainIds = bpe.TokeniseAndCreateBins(text, 0.9);
             string trainBinContent = string.Join(" ", trainIds);
-            trainBinTextBlock.Text = "Completed tokenising and saving of bins! Woohooohoho!" + trainBinContent;
+            trainBinTextBlock.Text = trainBinContent;
         }
+        private void sampleButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Read the train.bin file
+            byte[] trainBytes = File.ReadAllBytes("train.bin");
+
+            // Convert the byte array back to an array of integers
+            int[] trainIds = new int[trainBytes.Length / sizeof(int)];
+            Buffer.BlockCopy(trainBytes, 0, trainIds, 0, trainBytes.Length);
+
+            // Define the block size
+            int blockSize = 2048;
+
+            // Sample a random block start index
+            Random random = new Random();
+            int randomIndex = random.Next(0, trainIds.Length / blockSize) * blockSize;
+
+            // Get the block of IDs at the random index
+            int[] blockOfIds = new int[blockSize];
+            Array.Copy(trainIds, randomIndex, blockOfIds, 0, blockSize);
+
+            // Decode the block of IDs
+            string decodedText = bpe.Decode(blockOfIds);
+
+            // Display the decoded text
+            decodedTextBlock.Text = decodedText;
+        }
+
+
+
     }
 }
