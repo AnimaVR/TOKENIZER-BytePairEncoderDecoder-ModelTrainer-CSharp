@@ -46,7 +46,14 @@ namespace BytePairEncoding
                 MergeMostFrequentPair(pairCounts, words);
             }
 
-            AssignTokenIds();
+            foreach (string token in vocab.Keys)
+            {
+                if (!token2id.Any(kv => kv.Key == token))
+                {
+                    token2id.Add(new KeyValuePair<string, int>(token, tokenCount));
+                    tokenCount++;
+                }
+            }
             SaveModel("model.json");
         }
         private async Task LoadVocabAsync(List<List<string>> words, int minFrequency)
@@ -148,17 +155,7 @@ namespace BytePairEncoding
 
             return pairCounts;
         }
-        private void AssignTokenIds()
-        {
-            foreach (string token in vocab.Keys)
-            {
-                if (!token2id.Any(kv => kv.Key == token))
-                {
-                    token2id.Add(new KeyValuePair<string, int>(token, tokenCount));
-                    tokenCount++;
-                }
-            }
-        }
+       
         private void MergeMostFrequentPair(List<KeyValuePair<string, int>> pairCounts, List<List<string>> words)
         {
             var mostFreqPair = pairCounts.Aggregate((l, r) => l.Value > r.Value ? l : r).Key;
@@ -266,81 +263,8 @@ namespace BytePairEncoding
                 return tokens;
             }
         }
-        public string Encode(string input)
-        {
-            var encodedTokens = new StringBuilder();
-
-            foreach (var ch in input)
-            {
-                string token = ch == ' ' ? "<SPACE>" : ch.ToString();
-
-                if (!token2id.Any(kv => kv.Key == token))
-                {
-                    token2id.Add(new KeyValuePair<string, int>(token, tokenCount));
-                    tokenCount++;
-                }
-
-                encodedTokens.Append(token).Append(' ');
-            }
-
-            int i = 0;
-            while (i < encodedTokens.Length - 1)
-            {
-                string pair = encodedTokens[i].ToString() + encodedTokens[i + 1].ToString();
-                if (mergePairs.Contains(pair))
-                {
-                    string mergedToken = (string)mergePairs[pair]; // Cast to correct type
-                    encodedTokens[i] = mergedToken[0];
-                    encodedTokens.Remove(i + 1, 2);
-                    if (!token2id.Any(kv => kv.Key == mergedToken))
-                    {
-                        token2id.Add(new KeyValuePair<string, int>(mergedToken, tokenCount));
-                        tokenCount++;
-                    }
-                }
-                else
-                {
-                    i++;
-                }
-            }
-            return encodedTokens.ToString().TrimEnd();
-        }
-        public string Decode(string encodedText)
-        {
-            List<string> tokens = new List<string>(encodedText.Split(' '));
-            int i = 0;
-            while (i < tokens.Count)
-            {
-                if (tokens[i] == "<SPACE>")
-                {
-                    tokens[i] = " ";
-                    i++;
-                }
-                else
-                {
-                    var kvPairs = mergePairs.Cast<DictionaryEntry>()
-                         .Select(de => new KeyValuePair<string, string>((string)de.Key, (string)de.Value))
-                         .ToList();
-
-                    if (kvPairs.Any(kv => kv.Value == tokens[i]))
-                    {
-                        string originalPair = kvPairs.First(kv => kv.Value == tokens[i]).Key;
-                        tokens[i] = originalPair[0].ToString();
-                        tokens.Insert(i + 1, originalPair.Substring(1));
-                        i += 2;
-                    }
-                    else
-                    {
-                        i++;
-                    }
-                }
-            }
-
-            // Add handling for <PAD> token
-            tokens.RemoveAll(token => token == "<PAD>");
-
-            return string.Join("", tokens);
-        }
+       
+       
         public void SaveModel(string filePath)
         {
             using (StreamWriter writer = new StreamWriter(filePath))
@@ -438,22 +362,66 @@ namespace BytePairEncoding
                 }
             }
         }
-        public string ConvertToIds(string text)
+
+        public string Encode(string text)
         {
             string[] words = text.Split(' ');
+            StringBuilder encodedTokens = new StringBuilder();
 
-            string encodedText = Encode(string.Join(" ", words));
+            foreach (var word in words)
+            {
+                foreach (var ch in word)
+                {
+                    string token = ch.ToString();
 
-            int[] ids = encodedText.Split(' ').Select(token => token2id.Any(kv => kv.Key == token) ? token2id.Single(kv => kv.Key == token).Value : token2id.Single(kv => kv.Key == "<UNK>").Value).ToArray();
+                    if (!token2id.Any(kv => kv.Key == token))
+                    {
+                        token2id.Add(new KeyValuePair<string, int>(token, tokenCount));
+                        tokenCount++;
+                    }
 
+                    encodedTokens.Append(token).Append(' ');
+                }
+
+                encodedTokens.Append("<SPACE>").Append(' ');
+
+                int i = 0;
+                while (i < encodedTokens.Length - 1)
+                {
+                    string pair = encodedTokens[i].ToString() + encodedTokens[i + 1].ToString();
+                    if (mergePairs.Contains(pair))
+                    {
+                        string mergedToken = (string)mergePairs[pair]; // Cast to correct type
+                        encodedTokens[i] = mergedToken[0];
+                        encodedTokens.Remove(i + 1, 2);
+                        if (!token2id.Any(kv => kv.Key == mergedToken))
+                        {
+                            token2id.Add(new KeyValuePair<string, int>(mergedToken, tokenCount));
+                            tokenCount++;
+                        }
+                    }
+                    else
+                    {
+                        i++;
+                    }
+                }
+            }
+
+            // Remove trailing <SPACE> token if any
+            if (encodedTokens.ToString().EndsWith("<SPACE> "))
+            {
+                encodedTokens.Remove(encodedTokens.Length - 8, 8);
+            }
+
+            int[] ids = encodedTokens.ToString().TrimEnd().Split(' ').Select(token => token2id.Any(kv => kv.Key == token) ? token2id.Single(kv => kv.Key == token).Value : token2id.Single(kv => kv.Key == "<UNK>").Value).ToArray();
             string idsString = string.Join(" ", ids);
-
             return idsString;
         }
-        public string DecodeIds(string idsString)
+        public string Decode(string idsString)
         {
             string[] idStrings = idsString.Split(' ');
             List<string> tokens = new List<string>();
+
             foreach (string idStr in idStrings)
             {
                 if (int.TryParse(idStr, out int id))
@@ -469,9 +437,41 @@ namespace BytePairEncoding
                     }
                 }
             }
-            string decodedText = Decode(string.Join(" ", tokens));
-            return decodedText;
+
+            int i = 0;
+            while (i < tokens.Count)
+            {
+                if (tokens[i] == "<SPACE>")
+                {
+                    tokens[i] = " ";
+                    i++;
+                }
+                else
+                {
+                    var kvPairs = mergePairs.Cast<DictionaryEntry>()
+                         .Select(de => new KeyValuePair<string, string>((string)de.Key, (string)de.Value))
+                         .ToList();
+
+                    if (kvPairs.Any(kv => kv.Value == tokens[i]))
+                    {
+                        string originalPair = kvPairs.First(kv => kv.Value == tokens[i]).Key;
+                        tokens[i] = originalPair[0].ToString();
+                        tokens.Insert(i + 1, originalPair.Substring(1));
+                        i += 2;
+                    }
+                    else
+                    {
+                        i++;
+                    }
+                }
+            }
+
+            // Add handling for <PAD> token
+            tokens.RemoveAll(token => token == "<PAD>");
+
+            return string.Join("", tokens);
         }
+
         public int GetVocabSize()
         {
             return vocab.Count;

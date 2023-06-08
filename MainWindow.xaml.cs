@@ -18,21 +18,18 @@ namespace BytePairEncoding
             vocabSizeTextBlock.Text = "Vocabulary size: " + bpe.GetVocabSize().ToString();
            
         }
-
-
         private void encodeButton_Click(object sender, RoutedEventArgs e)
         {
             string inputText = inputTextBox.Text;
-            string encodedText = bpe.ConvertToIds(inputText);
+            string encodedText = bpe.Encode(inputText);
             encodedTextBlock.Text = "Encoded Text: " + encodedText;
         }
         private void decodeButton_Click(object sender, RoutedEventArgs e)
         {
             string encodedText = encodedTextBlock.Text;
-            string decodedText = bpe.DecodeIds(encodedText);
+            string decodedText = bpe.Decode(encodedText);
             decodedTextBlock.Text = "Decoded Text: " + decodedText;
         }
-
         private void LoadModelButton_Click(object sender, RoutedEventArgs e)
         {
             string modelPath = "model.json";
@@ -46,7 +43,6 @@ namespace BytePairEncoding
                 MessageBox.Show("No model found. You need to train one first.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
         private void TokenizeData_Click(object sender, RoutedEventArgs e)
         {
             string text = File.ReadAllText("input.txt");
