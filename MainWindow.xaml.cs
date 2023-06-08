@@ -46,9 +46,9 @@ namespace BytePairEncoding
         private void TokenizeData_Click(object sender, RoutedEventArgs e)
         {
             string text = File.ReadAllText("input.txt");
-            int[] trainIds = bpe.ConvertToIdsAndSplit(text, 0.9);
+            int[] trainIds = bpe.TokeniseAndCreateBins(text, 0.9);
             string trainBinContent = string.Join(" ", trainIds);
-            trainBinTextBlock.Text = trainBinContent;
+            trainBinTextBlock.Text = "Completed tokenising and saving of bins! Woohooohoho!" + trainBinContent;
         }
     }
 }
