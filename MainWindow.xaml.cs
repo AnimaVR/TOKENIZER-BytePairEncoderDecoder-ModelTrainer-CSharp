@@ -15,8 +15,9 @@ namespace BytePairEncoding
         }
         private async void startButton_Click(object sender, RoutedEventArgs e)
         {
-            await bpe.TrainAsync("input.txt", 2, 1);
-            vocabSizeTextBlock.Text = "Vocabulary size: " + bpe.GetVocabSize().ToString();
+            vocabSizeTextBlock.Text = "Training the model, please wait";
+            await bpe.TrainAsync("input.txt", 20, 1);
+            vocabSizeTextBlock.Text = "Training complete, vocabulary size of model = " + bpe.GetVocabSize().ToString();
            
         }
         private void encodeButton_Click(object sender, RoutedEventArgs e)
@@ -36,7 +37,6 @@ namespace BytePairEncoding
             }
             else
             {
-                // Handle the case when no encoded IDs are available
                 decodedTextBlock.Text = "No encoded text to decode.";
             }
         }
@@ -57,10 +57,12 @@ namespace BytePairEncoding
         }
         private void TokenizeData_Click(object sender, RoutedEventArgs e)
         {
+            vocabSizeTextBlock.Text = "Tokenising and saving training and validation data to bins";
             string fileName = "input.txt";
-            int[] trainIds = bpe.TokeniseAndCreateBins(fileName, 0.9);
-            string trainBinContent = string.Join(" ", trainIds);
-            trainBinTextBlock.Text = trainBinContent;
+            int[] valIds = bpe.TokeniseAndCreateBins(fileName, 0.9);
+            string valBinContent = string.Join(" ", valIds);
+            valBinTextBlock.Text = valBinContent;
+            vocabSizeTextBlock.Text = "Tokenisation and bin saving complete";
         }
 
         private void sampleButton_Click(object sender, RoutedEventArgs e)
@@ -86,7 +88,7 @@ namespace BytePairEncoding
             // Decode the block of IDs
             string decodedText = bpe.Decode(blockOfIds);
 
-            //decodedText = decodedText.Replace("<UNK>", "");  // this needs a fix!!!!
+            // decodedText = decodedText.Replace("<UNK>", "");  // this needs a fix, we did fix it but by replacing <UNK> with \n. This is something that will come back to bite me i am sure of it.
 
             // Display the decoded text
             decodedTextBlock.Text = decodedText;

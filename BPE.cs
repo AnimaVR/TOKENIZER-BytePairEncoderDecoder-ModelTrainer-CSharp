@@ -16,7 +16,29 @@ namespace BytePairEncoding
         private OrderedDictionary vocab = new OrderedDictionary();
         private OrderedDictionary mergePairs = new OrderedDictionary();
         private int tokenCount = 0;
+        public void SaveModel(string filePath)
+        {
+            using (StreamWriter writer = new StreamWriter(filePath))
+            {
+                writer.WriteLine("Vocabulary:");
+                foreach (DictionaryEntry entry in vocab)
+                {
+                    writer.WriteLine($"{entry.Key}\t{entry.Value}");
+                }
 
+                writer.WriteLine("Merge Pairs:");
+                foreach (DictionaryEntry entry in mergePairs)
+                {
+                    writer.WriteLine($"{entry.Key}\t{entry.Value}");
+                }
+
+                writer.WriteLine("Token to ID Mappings:");
+                foreach (var pair in token2id)
+                {
+                    writer.WriteLine($"{pair.Key}\t{pair.Value}");
+                }
+            }
+        }
         public async Task TrainAsync(string fileName, int numMerges, int minFrequency)
         {
             vocab.Clear();
@@ -227,79 +249,16 @@ namespace BytePairEncoding
         }
 
 
-        public int[] TokeniseAndCreateBins(string fileName, double trainRatio = 0.9)
+        public int GetVocabSize()
         {
-            string text = File.ReadAllText(fileName);
-           text = text.Replace("\n", " ");
-            string[] words = text.Split(' ');
-
-            int trainChunkSize = 2048;
-            int valChunkSize = 2048;
-
-            int splitIndex = (int)(words.Length * trainRatio);
-
-            string[] trainWords = words.Take(splitIndex).ToArray();
-            string[] valWords = words.Skip(splitIndex).ToArray();
-
-            int[] encodedTrain = Encode(string.Join(" ", trainWords));
-            int[] encodedVal = Encode(string.Join(" ", valWords));
-
-            int trainNumTokens = (int)Math.Ceiling(encodedTrain.Length / (double)trainChunkSize) * trainChunkSize;
-            int valNumTokens = (int)Math.Ceiling(encodedVal.Length / (double)valChunkSize) * valChunkSize;
-
-            int[] trainIds = AdjustTokensToChunkSize(encodedTrain, trainChunkSize, trainNumTokens);
-            int[] valIds = AdjustTokensToChunkSize(encodedVal, valChunkSize, valNumTokens);
-
-            using (BinaryWriter writer = new BinaryWriter(File.OpenWrite("train.bin")))
-            {
-                foreach (int id in trainIds)
-                {
-                    writer.Write(id);
-                }
-            }
-
-            using (BinaryWriter writer = new BinaryWriter(File.OpenWrite("val.bin")))
-            {
-                foreach (int id in valIds)
-                {
-                    writer.Write(id);
-                }
-            }
-
-            return valIds;
-        }
-        private int[] AdjustTokensToChunkSize(int[] tokens, int chunkSize, int numTokens)
-        {
-            if (tokens.Length < numTokens)
-            {
-                int[] adjustedTokens = new int[numTokens];
-                Array.Copy(tokens, adjustedTokens, tokens.Length);
-
-                int paddingToken = token2id.Single(kv => kv.Key == "<PAD>").Value;  
-                for (int i = tokens.Length; i < numTokens; i++)
-                {
-                    adjustedTokens[i] = paddingToken;
-                }
-
-                return adjustedTokens;
-            }
-            else if (tokens.Length > numTokens)
-            {
-                int[] adjustedTokens = new int[numTokens];
-                Array.Copy(tokens, adjustedTokens, numTokens);
-                return adjustedTokens;
-            }
-            else
-            {
-                return tokens;
-            }
+            return vocab.Count;
         }
 
 
         public int[] Encode(string text)
         {
             string[] words = text.Replace("\n", "").Split(' ');
-           
+
             List<int> encodedTokens = new List<int>();
 
             foreach (var word in words)
@@ -390,31 +349,76 @@ namespace BytePairEncoding
             return string.Join("", tokens);
         }
 
-
-
-        public void SaveModel(string filePath)
+        public int[] TokeniseAndCreateBins(string fileName, double trainRatio = 0.9)
         {
-            using (StreamWriter writer = new StreamWriter(filePath))
+            string text = File.ReadAllText(fileName);
+           text = text.Replace("\n", " ");
+            string[] words = text.Split(' ');
+
+            int trainChunkSize = 2048;
+            int valChunkSize = 2048;
+
+            int splitIndex = (int)(words.Length * trainRatio);
+
+            string[] trainWords = words.Take(splitIndex).ToArray();
+            string[] valWords = words.Skip(splitIndex).ToArray();
+
+            int[] encodedTrain = Encode(string.Join(" ", trainWords));
+            int[] encodedVal = Encode(string.Join(" ", valWords));
+
+            int trainNumTokens = (int)Math.Ceiling(encodedTrain.Length / (double)trainChunkSize) * trainChunkSize;
+            int valNumTokens = (int)Math.Ceiling(encodedVal.Length / (double)valChunkSize) * valChunkSize;
+
+            int[] trainIds = AdjustTokensToChunkSize(encodedTrain, trainChunkSize, trainNumTokens);
+            int[] valIds = AdjustTokensToChunkSize(encodedVal, valChunkSize, valNumTokens);
+
+            using (BinaryWriter writer = new BinaryWriter(File.OpenWrite("train.bin")))
             {
-                writer.WriteLine("Vocabulary:");
-                foreach (DictionaryEntry entry in vocab)
+                foreach (int id in trainIds)
                 {
-                    writer.WriteLine($"{entry.Key}\t{entry.Value}");
-                }
-
-                writer.WriteLine("Merge Pairs:");
-                foreach (DictionaryEntry entry in mergePairs)
-                {
-                    writer.WriteLine($"{entry.Key}\t{entry.Value}");
-                }
-
-                writer.WriteLine("Token to ID Mappings:");
-                foreach (var pair in token2id)
-                {
-                    writer.WriteLine($"{pair.Key}\t{pair.Value}");
+                    writer.Write(id);
                 }
             }
+
+            using (BinaryWriter writer = new BinaryWriter(File.OpenWrite("val.bin")))
+            {
+                foreach (int id in valIds)
+                {
+                    writer.Write(id);
+                }
+            }
+
+            return valIds;
         }
+        private int[] AdjustTokensToChunkSize(int[] tokens, int chunkSize, int numTokens)
+        {
+            if (tokens.Length < numTokens)
+            {
+                int[] adjustedTokens = new int[numTokens];
+                Array.Copy(tokens, adjustedTokens, tokens.Length);
+
+                int paddingToken = token2id.Single(kv => kv.Key == "<PAD>").Value;  
+                for (int i = tokens.Length; i < numTokens; i++)
+                {
+                    adjustedTokens[i] = paddingToken;
+                }
+
+                return adjustedTokens;
+            }
+            else if (tokens.Length > numTokens)
+            {
+                int[] adjustedTokens = new int[numTokens];
+                Array.Copy(tokens, adjustedTokens, numTokens);
+                return adjustedTokens;
+            }
+            else
+            {
+                return tokens;
+            }
+        }
+
+
+
         public void LoadModel(string filePath)
         {
             vocab.Clear();
@@ -496,9 +500,5 @@ namespace BytePairEncoding
         }
 
 
-        public int GetVocabSize()
-        {
-            return vocab.Count;
-        }
     }
 }
