@@ -15,8 +15,8 @@ namespace BytePairEncoding
         private List<KeyValuePair<string, int>> token2id = new List<KeyValuePair<string, int>>();
         private OrderedDictionary vocab = new OrderedDictionary();
         private OrderedDictionary mergePairs = new OrderedDictionary();
-
         private int tokenCount = 1;
+
         public async Task TrainAsync(string fileName, int numMerges, int minFrequency)
         {
             vocab.Clear();
@@ -170,7 +170,6 @@ namespace BytePairEncoding
 
             return pairCounts;
         }
-
 
         private void MergeMostFrequentPair(List<KeyValuePair<string, int>> pairCounts, List<List<string>> words)
         {
@@ -425,13 +424,10 @@ namespace BytePairEncoding
                     }
                 }
             }
-
-            // Remove trailing <SPACE> token if any
             if (encodedTokens.ToString().EndsWith("<SPACE> "))
             {
                 encodedTokens.Remove(encodedTokens.Length - 8, 8);
             }
-
             int[] ids = encodedTokens.ToString().TrimEnd().Split(' ').Select(token => token2id.Any(kv => kv.Key == token) ? token2id.Single(kv => kv.Key == token).Value : token2id.Single(kv => kv.Key == "<UNK>").Value).ToArray();
             string idsString = string.Join(" ", ids);
             return idsString;
@@ -445,12 +441,18 @@ namespace BytePairEncoding
             {
                 if (int.TryParse(idStr, out int id))
                 {
-                    if (token2id.Any(kv => kv.Value == id))
+                    bool foundToken = false;
+                    foreach (var kv in token2id)
                     {
-                        string token = token2id.First(kv => kv.Value == id).Key;
-                        tokens.Add(token);
+                        if (kv.Value == id)
+                        {
+                            tokens.Add(kv.Key);
+                            foundToken = true;
+                            break;
+                        }
                     }
-                    else
+
+                    if (!foundToken)
                     {
                         tokens.Add("<UNK>");
                     }
@@ -467,27 +469,27 @@ namespace BytePairEncoding
                 }
                 else
                 {
-                    var kvPairs = mergePairs.Cast<DictionaryEntry>()
-                         .Select(de => new KeyValuePair<string, string>((string)de.Key, (string)de.Value))
-                         .ToList();
-
-                    if (kvPairs.Any(kv => kv.Value == tokens[i]))
+                    bool foundPair = false;
+                    foreach (DictionaryEntry de in mergePairs)
                     {
-                        string originalPair = kvPairs.First(kv => kv.Value == tokens[i]).Key;
-                        tokens[i] = originalPair[0].ToString();
-                        tokens.Insert(i + 1, originalPair.Substring(1));
-                        i += 2;
+                        if ((string)de.Value == tokens[i])
+                        {
+                            string originalPair = (string)de.Key;
+                            tokens[i] = originalPair[0].ToString();
+                            tokens.Insert(i + 1, originalPair.Substring(1));
+                            i += 2;
+                            foundPair = true;
+                            break;
+                        }
                     }
-                    else
+
+                    if (!foundPair)
                     {
                         i++;
                     }
                 }
             }
-
-            // Add handling for <PAD> token
             tokens.RemoveAll(token => token == "<PAD>");
-
             return string.Join("", tokens);
         }
 
