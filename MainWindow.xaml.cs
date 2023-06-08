@@ -85,7 +85,7 @@ namespace BytePairEncoding
 
             // Decode the block of IDs
             string decodedText = bpe.Decode(blockOfIds);
-
+            decodedText = decodedText.Replace("<UNK>", "");
             // Display the decoded text
             decodedTextBlock.Text = decodedText;
         }

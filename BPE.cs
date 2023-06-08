@@ -234,6 +234,7 @@ namespace BytePairEncoding
 
         public int[] TokeniseAndCreateBins(string text, double trainRatio = 0.9)
         {
+            text = text.Replace("\n", " ");
             string[] words = text.Split(' ');
 
             int trainChunkSize = 2048;
@@ -301,7 +302,8 @@ namespace BytePairEncoding
         }
         public int[] Encode(string text)
         {
-            string[] words = text.Split(' ');
+            string[] words = text.Replace("\n", "").Split(' ');
+           
             List<int> encodedTokens = new List<int>();
 
             foreach (var word in words)
@@ -420,7 +422,11 @@ namespace BytePairEncoding
             mergePairs.Clear();
             token2id.Clear();
             tokenCount = 0; // Reset the token count
-
+            vocab["<UNK>"] = 0;
+            token2id.Add(new KeyValuePair<string, int>("<UNK>", 0));
+            vocab["<PAD>"] = 0;
+            token2id.Add(new KeyValuePair<string, int>("<PAD>", 0));
+            tokenCount = 1;
             using (StreamReader reader = new StreamReader(filePath))
             {
                 string section = "";
