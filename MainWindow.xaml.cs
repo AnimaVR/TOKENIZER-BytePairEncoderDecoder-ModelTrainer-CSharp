@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.IO;
+﻿using System.IO;
 using System.Windows;
 using System;
 
@@ -86,7 +85,9 @@ namespace BytePairEncoding
 
             // Decode the block of IDs
             string decodedText = bpe.Decode(blockOfIds);
-            decodedText = decodedText.Replace("<UNK>", "");
+
+            decodedText = decodedText.Replace("<UNK>", "");  // this needs a fix!!!!
+
             // Display the decoded text
             decodedTextBlock.Text = decodedText;
         }

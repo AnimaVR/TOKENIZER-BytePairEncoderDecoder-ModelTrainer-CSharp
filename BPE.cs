@@ -56,7 +56,6 @@ namespace BytePairEncoding
             }
             SaveModel("model.json");
         }
-
         private async Task LoadVocabAsync(List<List<string>> words, int minFrequency)
         {
             object lockObject = new object();
@@ -108,7 +107,6 @@ namespace BytePairEncoding
                 vocab.Remove(subwordUnit);
             }
         }
-
         private async Task<List<KeyValuePair<string, int>>> CountPairAsync(List<List<string>> words)
         {
             var pairCounts = new List<KeyValuePair<string, int>>();
@@ -172,7 +170,6 @@ namespace BytePairEncoding
 
             return pairCounts;
         }
-
         private void MergeMostFrequentPair(List<KeyValuePair<string, int>> pairCounts, List<List<string>> words)
         {
             var mostFreqPair = pairCounts.Aggregate((l, r) => l.Value > r.Value ? l : r).Key;
@@ -230,8 +227,6 @@ namespace BytePairEncoding
         }
 
 
-
-
         public int[] TokeniseAndCreateBins(string fileName, double trainRatio = 0.9)
         {
             string text = File.ReadAllText(fileName);
@@ -273,8 +268,6 @@ namespace BytePairEncoding
 
             return trainIds;
         }
-
-
         private int[] AdjustTokensToChunkSize(int[] tokens, int chunkSize, int numTokens)
         {
             if (tokens.Length < numTokens)
@@ -301,6 +294,8 @@ namespace BytePairEncoding
                 return tokens;
             }
         }
+
+
         public int[] Encode(string text)
         {
             string[] words = text.Replace("\n", "").Split(' ');
@@ -332,7 +327,6 @@ namespace BytePairEncoding
 
             return encodedTokens.ToArray();
         }
-
         public string Decode(int[] ids)
         {
             List<string> tokens = new List<string>();
@@ -390,8 +384,6 @@ namespace BytePairEncoding
             tokens.RemoveAll(token => token == "<PAD>");
             return string.Join("", tokens);
         }
-
-
 
 
         public void SaveModel(string filePath)
@@ -496,7 +488,6 @@ namespace BytePairEncoding
             }
            
         }
-
 
 
         public int GetVocabSize()
