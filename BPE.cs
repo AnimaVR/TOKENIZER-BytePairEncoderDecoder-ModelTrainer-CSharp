@@ -15,7 +15,7 @@ namespace BytePairEncoding
         private List<KeyValuePair<string, int>> token2id = new List<KeyValuePair<string, int>>();
         private OrderedDictionary vocab = new OrderedDictionary();
         private OrderedDictionary mergePairs = new OrderedDictionary();
-        private int tokenCount = 1;
+        private int tokenCount = 0;
 
         public async Task TrainAsync(string fileName, int numMerges, int minFrequency)
         {
@@ -31,9 +31,9 @@ namespace BytePairEncoding
             await LoadVocabAsync(words, minFrequency);
             vocab["<UNK>"] = 0;
             token2id.Add(new KeyValuePair<string, int>("<UNK>", 0));
-            vocab["<PAD>"] = 0;
-            token2id.Add(new KeyValuePair<string, int>("<PAD>", 0));
-            tokenCount = 1;
+            vocab["<PAD>"] = 1;
+            token2id.Add(new KeyValuePair<string, int>("<PAD>", 1));
+            tokenCount = 2;
 
             for (int i = 0; i < numMerges; i++)
             {
@@ -230,7 +230,7 @@ namespace BytePairEncoding
         public int[] TokeniseAndCreateBins(string fileName, double trainRatio = 0.9)
         {
             string text = File.ReadAllText(fileName);
-           // text = text.Replace("\n", " ");
+           text = text.Replace("\n", " ");
             string[] words = text.Split(' ');
 
             int trainChunkSize = 2048;
@@ -266,7 +266,7 @@ namespace BytePairEncoding
                 }
             }
 
-            return trainIds;
+            return valIds;
         }
         private int[] AdjustTokensToChunkSize(int[] tokens, int chunkSize, int numTokens)
         {
@@ -358,6 +358,11 @@ namespace BytePairEncoding
                     tokens[i] = " ";
                     i++;
                 }
+                else if (tokens[i] == "<UNK>")
+                {
+                    tokens[i] = "\n";  // Replace "<UNK>" with newline character
+                    i++;
+                }
                 else
                 {
                     bool foundPair = false;
@@ -384,6 +389,7 @@ namespace BytePairEncoding
             tokens.RemoveAll(token => token == "<PAD>");
             return string.Join("", tokens);
         }
+
 
 
         public void SaveModel(string filePath)
@@ -417,9 +423,9 @@ namespace BytePairEncoding
             tokenCount = 0; // Reset the token count
             vocab["<UNK>"] = 0;
             token2id.Add(new KeyValuePair<string, int>("<UNK>", 0));
-            vocab["<PAD>"] = 0;
-            token2id.Add(new KeyValuePair<string, int>("<PAD>", 0));
-            tokenCount = 1;
+            vocab["<PAD>"] = 1;
+            token2id.Add(new KeyValuePair<string, int>("<PAD>", 1));
+            tokenCount = 2;
             using (StreamReader reader = new StreamReader(filePath))
             {
                 string section = "";

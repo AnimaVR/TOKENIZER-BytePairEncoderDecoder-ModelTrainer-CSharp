@@ -15,7 +15,7 @@ namespace BytePairEncoding
         }
         private async void startButton_Click(object sender, RoutedEventArgs e)
         {
-            await bpe.TrainAsync("input.txt", 10, 1);
+            await bpe.TrainAsync("input.txt", 2, 1);
             vocabSizeTextBlock.Text = "Vocabulary size: " + bpe.GetVocabSize().ToString();
            
         }
@@ -86,7 +86,7 @@ namespace BytePairEncoding
             // Decode the block of IDs
             string decodedText = bpe.Decode(blockOfIds);
 
-            decodedText = decodedText.Replace("<UNK>", "");  // this needs a fix!!!!
+            //decodedText = decodedText.Replace("<UNK>", "");  // this needs a fix!!!!
 
             // Display the decoded text
             decodedTextBlock.Text = decodedText;
