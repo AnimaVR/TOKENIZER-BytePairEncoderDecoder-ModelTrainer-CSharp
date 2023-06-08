@@ -58,11 +58,12 @@ namespace BytePairEncoding
         }
         private void TokenizeData_Click(object sender, RoutedEventArgs e)
         {
-            string text = File.ReadAllText("input.txt");
-            int[] trainIds = bpe.TokeniseAndCreateBins(text, 0.9);
+            string fileName = "input.txt";
+            int[] trainIds = bpe.TokeniseAndCreateBins(fileName, 0.9);
             string trainBinContent = string.Join(" ", trainIds);
             trainBinTextBlock.Text = trainBinContent;
         }
+
         private void sampleButton_Click(object sender, RoutedEventArgs e)
         {
             // Read the train.bin file

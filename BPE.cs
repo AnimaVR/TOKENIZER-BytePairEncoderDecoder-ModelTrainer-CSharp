@@ -232,9 +232,10 @@ namespace BytePairEncoding
 
 
 
-        public int[] TokeniseAndCreateBins(string text, double trainRatio = 0.9)
+        public int[] TokeniseAndCreateBins(string fileName, double trainRatio = 0.9)
         {
-            text = text.Replace("\n", " ");
+            string text = File.ReadAllText(fileName);
+           // text = text.Replace("\n", " ");
             string[] words = text.Split(' ');
 
             int trainChunkSize = 2048;
