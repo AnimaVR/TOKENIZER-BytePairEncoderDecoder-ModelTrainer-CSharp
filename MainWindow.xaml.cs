@@ -13,13 +13,30 @@ namespace BytePairEncoding
             InitializeComponent();
             bpe = new BPE();
         }
-        private async void startButton_Click(object sender, RoutedEventArgs e)
+
+
+        private void LoadModelButton_Click(object sender, RoutedEventArgs e)
+        {
+            string modelPath = "model.json";
+            if (File.Exists(modelPath))
+            {
+                bpe.LoadModel(modelPath);
+                MessageBox.Show("Model loaded successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                MessageBox.Show("No model found. You need to train one first.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private async void startTrainingButton_Click(object sender, RoutedEventArgs e)
         {
             vocabSizeTextBlock.Text = "Training the model, please wait";
-            await bpe.TrainAsync("input.txt", 20, 1);
+            await bpe.TrainAsync("input.txt", 2, 1);
             vocabSizeTextBlock.Text = "Training complete, vocabulary size of model = " + bpe.GetVocabSize().ToString();
            
         }
+
+
         private void encodeButton_Click(object sender, RoutedEventArgs e)
         {
             string inputText = inputTextBox.Text;
@@ -42,19 +59,7 @@ namespace BytePairEncoding
         }
 
 
-        private void LoadModelButton_Click(object sender, RoutedEventArgs e)
-        {
-            string modelPath = "model.json";
-            if (File.Exists(modelPath))
-            {
-                bpe.LoadModel(modelPath);
-                MessageBox.Show("Model loaded successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            else
-            {
-                MessageBox.Show("No model found. You need to train one first.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
+
         private void TokenizeData_Click(object sender, RoutedEventArgs e)
         {
             vocabSizeTextBlock.Text = "Tokenising and saving training and validation data to bins";

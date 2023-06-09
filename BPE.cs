@@ -59,25 +59,40 @@ namespace BytePairEncoding
 
             for (int i = 0; i < numMerges; i++)
             {
-                var pairCounts = await CountPairAsync(words);
+                var result = await CountPairAsync(words);
+                var pairCounts = result.Item1;
+                var mostFreqPair = result.Item2;
+
                 if (pairCounts.Count == 0)
                 {
                     break;
                 }
 
-                MergeMostFrequentPair(pairCounts, words);
+                MergeMostFrequentPair(pairCounts, mostFreqPair, words);
             }
 
             foreach (string token in vocab.Keys)
             {
-                if (!token2id.Any(kv => kv.Key == token))
+                bool exists = false;
+                foreach (var kv in token2id)
+                {
+                    if (kv.Key == token)
+                    {
+                        exists = true;
+                        break;
+                    }
+                }
+
+                if (!exists)
                 {
                     token2id.Add(new KeyValuePair<string, int>(token, tokenCount));
                     tokenCount++;
                 }
             }
+
             SaveModel("model.json");
         }
+
         private async Task LoadVocabAsync(List<List<string>> words, int minFrequency)
         {
             object lockObject = new object();
@@ -120,18 +135,25 @@ namespace BytePairEncoding
                 }
             }));
 
-            var subwordUnitsToRemove = vocab.Cast<DictionaryEntry>()
-                                            .Where(pair => (int)pair.Value < minFrequency)
-                                            .Select(pair => pair.Key.ToString())
-                                            .ToList();
+            List<string> subwordUnitsToRemove = new List<string>();
+            foreach (DictionaryEntry pair in vocab)
+            {
+                if ((int)pair.Value < minFrequency)
+                {
+                    subwordUnitsToRemove.Add(pair.Key.ToString());
+                }
+            }
+
             foreach (var subwordUnit in subwordUnitsToRemove)
             {
                 vocab.Remove(subwordUnit);
             }
+
         }
-        private async Task<List<KeyValuePair<string, int>>> CountPairAsync(List<List<string>> words)
+        private async Task<(List<KeyValuePair<string, int>>, KeyValuePair<string, int>?)> CountPairAsync(List<List<string>> words)
         {
             var pairCounts = new List<KeyValuePair<string, int>>();
+            KeyValuePair<string, int>? mostFreqPair = null;
             object lockObjectPairCounts = new object();
 
             await Task.Run(() => Parallel.ForEach(words, word =>
@@ -180,41 +202,60 @@ namespace BytePairEncoding
                         if (existingPair == null)
                         {
                             pairCounts.Add(new KeyValuePair<string, int>(pair.Key, pair.Value));
+
+                            // Check if this new pair is the most frequent
+                            if (mostFreqPair == null || pair.Value > mostFreqPair.Value.Value)
+                            {
+                                mostFreqPair = pair;
+                            }
                         }
                         else
                         {
-                            pairCounts[pairCounts.IndexOf(existingPair.Value)] =
-                                new KeyValuePair<string, int>(pair.Key, existingPair.Value.Value + pair.Value);
+                            var updatedPair = new KeyValuePair<string, int>(pair.Key, existingPair.Value.Value + pair.Value);
+                            pairCounts[pairCounts.IndexOf(existingPair.Value)] = updatedPair;
+
+                            // Check if the updated pair is now the most frequent
+                            if (updatedPair.Value > mostFreqPair.Value.Value)
+                            {
+                                mostFreqPair = updatedPair;
+                            }
                         }
                     }
                 }
             }));
 
-            return pairCounts;
+            return (pairCounts, mostFreqPair);
         }
-        private void MergeMostFrequentPair(List<KeyValuePair<string, int>> pairCounts, List<List<string>> words)
+
+        private void MergeMostFrequentPair(List<KeyValuePair<string, int>> pairCounts, KeyValuePair<string, int>? mostFreqPair, List<List<string>> words)
         {
-            var mostFreqPair = pairCounts.Aggregate((l, r) => l.Value > r.Value ? l : r).Key;
-            string newToken = mostFreqPair;  // Note: No need to use string.Join("", mostFreqPair)
+            if (mostFreqPair == null)
+            {
+                return;
+            }
+
+            string mostFreqPairKey = mostFreqPair.Value.Key;
+            int mostFreqPairValue = mostFreqPair.Value.Value;
+            string newToken = mostFreqPairKey;
 
             lock (vocab)
             {
-                vocab[newToken] = pairCounts.First(p => p.Key == mostFreqPair).Value;
+                vocab[newToken] = mostFreqPairValue;
             }
 
             lock (mergePairs)
             {
-                mergePairs[mostFreqPair] = newToken;
+                mergePairs[mostFreqPairKey] = newToken;
             }
 
             foreach (var word in words)
             {
                 for (int j = 0; j < word.Count - 1;)
                 {
-                    var builder = new StringBuilder(word[j]); // initialize StringBuilder with the first part of the pair
-                    builder.Append(word[j + 1]); // append the second part of the pair
+                    var builder = new StringBuilder(word[j]);
+                    builder.Append(word[j + 1]);
 
-                    if (builder.ToString() == mostFreqPair)  // compare with StringBuilder result
+                    if (builder.ToString() == mostFreqPairKey)
                     {
                         word[j] = newToken;
                         word.RemoveAt(j + 1);
@@ -228,25 +269,26 @@ namespace BytePairEncoding
 
             lock (vocab)
             {
-                if (vocab.Contains(mostFreqPair[0].ToString()))
+                if (vocab.Contains(mostFreqPairKey[0].ToString()))
                 {
-                    vocab[mostFreqPair[0].ToString()] = (int)vocab[mostFreqPair[0].ToString()] - pairCounts.First(p => p.Key == mostFreqPair).Value;
-                    if ((int)vocab[mostFreqPair[0].ToString()] <= 0)
+                    vocab[mostFreqPairKey[0].ToString()] = (int)vocab[mostFreqPairKey[0].ToString()] - mostFreqPairValue;
+                    if ((int)vocab[mostFreqPairKey[0].ToString()] <= 0)
                     {
-                        vocab.Remove(mostFreqPair[0].ToString());
+                        vocab.Remove(mostFreqPairKey[0].ToString());
                     }
                 }
 
-                if (vocab.Contains(mostFreqPair[1].ToString()))
+                if (vocab.Contains(mostFreqPairKey[1].ToString()))
                 {
-                    vocab[mostFreqPair[1].ToString()] = (int)vocab[mostFreqPair[1].ToString()] - pairCounts.First(p => p.Key == mostFreqPair).Value;
-                    if ((int)vocab[mostFreqPair[1].ToString()] <= 0)
+                    vocab[mostFreqPairKey[1].ToString()] = (int)vocab[mostFreqPairKey[1].ToString()] - mostFreqPairValue;
+                    if ((int)vocab[mostFreqPairKey[1].ToString()] <= 0)
                     {
-                        vocab.Remove(mostFreqPair[1].ToString());
+                        vocab.Remove(mostFreqPairKey[1].ToString());
                     }
                 }
             }
         }
+
 
 
         public int GetVocabSize()

@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <Button x:Name="startButton" Content="Start Training" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="200" Click="startButton_Click"/>
+        <Button x:Name="startButton" Content="Start Training" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="200" Click="startTrainingButton_Click"/>
         <TextBlock x:Name="vocabSizeTextBlock" Margin="10,0,421,95" TextWrapping="Wrap" Text="" Height="35" VerticalAlignment="Bottom"/>
         <Button x:Name="decodeButton" Content="Decode" HorizontalAlignment="Left" Margin="10,0,0,48" Width="111" Click="decodeButton_Click" Height="30" VerticalAlignment="Bottom"/>
         <TextBlock x:Name="decodedTextBlock" Margin="445,0,10,45" TextWrapping="Wrap" Text="" Height="33" VerticalAlignment="Bottom" Foreground="#FFFDFDFD" Background="#FF313131"/>
