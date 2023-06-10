@@ -129,8 +129,6 @@ namespace BytePairEncoding
             }
         }
 
-       
-
         public int GetVocabSize()
         {
             return vocab.Count;

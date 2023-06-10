@@ -78,7 +78,7 @@ namespace BytePairEncoding
         private void sampleButton_Click(object sender, RoutedEventArgs e)
         {
             // Read the train.bin file
-            byte[] trainBytes = File.ReadAllBytes("train.bin");
+            byte[] trainBytes = File.ReadAllBytes("val.bin");
 
             // Convert the byte array back to an array of integers
             int[] trainIds = new int[trainBytes.Length / sizeof(int)];

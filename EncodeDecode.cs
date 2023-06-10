@@ -25,7 +25,6 @@ namespace BytePairEncoding
             this.tokenCount = bpe.tokenCount;
         }
 
-
         public int[] Encode(string text)
         {
             string[] words = text.Split(' ');
@@ -152,7 +151,5 @@ namespace BytePairEncoding
             return string.Join("", tokens);
         }
 
-
-       
     }
 }
