@@ -21,10 +21,17 @@ namespace BytePairEncoding
         public void SaveModel(string filePath)
         {
             int lastValue = token2id.Max(pair => pair.Value);
-            int newValue = lastValue + 1;
+            int spaceValue = lastValue + 1;
+            int commaValue = lastValue + 2;
+            int commaValue2 = lastValue + 3;
 
-            // Add a new entry with key as space and value as newValue
-            token2id.Add(new KeyValuePair<string, int>(" ", newValue));
+            // Add a new entry with key as space and value as spaceValue
+            token2id.Add(new KeyValuePair<string, int>(" ", spaceValue));
+
+            // Add a new entry with key as comma and value as commaValue
+            token2id.Add(new KeyValuePair<string, int>(",", commaValue));
+
+            token2id.Add(new KeyValuePair<string, int>(",", commaValue2));
 
             using (StreamWriter writer = new StreamWriter(filePath))
             {
@@ -47,6 +54,7 @@ namespace BytePairEncoding
                 }
             }
         }
+
 
 
         public void LoadModel(string filePath)
@@ -177,22 +185,13 @@ namespace BytePairEncoding
 
             foreach (string token in vocab.Keys)
             {
-                bool exists = false;
-                foreach (var kv in token2id)
-                {
-                    if (kv.Key == token)
-                    {
-                        exists = true;
-                        break;
-                    }
-                }
-
-                if (!exists)
+                if (!token2id.Any(kv => kv.Key == token))
                 {
                     token2id.Add(new KeyValuePair<string, int>(token, tokenCount));
                     tokenCount++;
                 }
             }
+
 
             SaveModel("model.txt");
 

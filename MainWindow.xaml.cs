@@ -29,14 +29,14 @@ namespace BytePairEncoding
                 MessageBox.Show("No model found. You need to train one first.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
         private async void startTrainingButton_Click(object sender, RoutedEventArgs e)
         {
             vocabSizeTextBlock.Text = "Training the model, please wait";
-            await bpe.TrainAsync("input.txt", 10, 1);
+            await bpe.TrainAsync("input.txt", 10, 0);
             vocabSizeTextBlock.Text = "Training complete, vocabulary size of model = " + bpe.GetVocabSize().ToString() + "+1 for the end of line spaces";
            
         }
-
 
         private void encodeButton_Click(object sender, RoutedEventArgs e)
         {
@@ -80,29 +80,15 @@ namespace BytePairEncoding
             Buffer.BlockCopy(trainBytes, 0, trainIds, 0, trainBytes.Length);
 
             // Define the block size
-            int blockSize = 2048;
+            int blockSize = 1024;
+            
+            int[] blockOfIds = trainIds.Take(blockSize).ToArray();
 
-            if (trainIds.Length >= blockSize)
-            {
-                // Get the first block of IDs
-                int[] blockOfIds = trainIds.Take(blockSize).ToArray();
+            string decodedText = bpe.Decode(blockOfIds);
 
-                // Decode the block of IDs
-                string decodedText = bpe.Decode(blockOfIds);
-
-                // Display the decoded text
-                valBinTextBlock.Text = decodedText;
-            }
-            else
-            {
-                // Handle the case where there are not enough IDs to form a full block
-                // You can display an error message or take appropriate action
-                // ...
-            }
+            valBinTextBlock.Text = decodedText;
+           
         }
-
-
-
 
     }
 }
