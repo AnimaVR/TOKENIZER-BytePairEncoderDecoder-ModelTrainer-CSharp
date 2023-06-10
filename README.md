@@ -8,8 +8,8 @@ c# xaml byte pair encoder/decoder/tokenizer with a model trainer!
 3. Use model to encode decode text
 4. Profit
 
-just a start, needs some work but is a working example with shoddy ui that trains on input.txt and saves model.json that you can use to encode and decode tokens.
+just a start, needs some work but is a working example with shoddy ui that trains on input.txt and saves model.txt that you can use to encode and decode tokens.
 
-very rough, needs some tidying. 
+very rough, needs some tidying but its interesting to see it in c# at least :)
 
 Hope it helps someone understand bpe!
