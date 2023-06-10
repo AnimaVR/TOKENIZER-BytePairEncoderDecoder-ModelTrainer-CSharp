@@ -54,9 +54,6 @@ namespace BytePairEncoding
                 }
             }
         }
-
-
-
         public void LoadModel(string filePath)
         {
             vocab.Clear();
@@ -132,6 +129,17 @@ namespace BytePairEncoding
                                             }
                                         }
                                     }
+                                    else if (parts.Length == 2 && int.TryParse(parts[0], out int customId)) // Handle custom token ID
+                                    {
+                                        if (!token2id.Any(kv => kv.Value == customId)) // Check if ID already exists
+                                        {
+                                            token2id.Add(new KeyValuePair<string, int>(parts[1], customId));
+                                            if (customId > tokenCount)
+                                            {
+                                                tokenCount = customId + 1; // Update the token count
+                                            }
+                                        }
+                                    }
                                     break;
                                 }
                         }
@@ -139,6 +147,8 @@ namespace BytePairEncoding
                 }
             }
         }
+
+
 
 
         public async Task TrainAsync(string fileName, int numMerges, int minFrequency)
@@ -198,8 +208,6 @@ namespace BytePairEncoding
             LoadModel("model.txt");  // this is a workaround to allow the model to be consistent between closing after training it into memory.
                                      // memory is saved slightly differently into file randomly so when we load it it's different and we need to tokenize again.... annoyingly!!!
         }
-
-
         private async Task LoadVocabAsync(List<List<string>> words, int minFrequency)
         {
             object lockObject = new object();
@@ -377,10 +385,14 @@ namespace BytePairEncoding
 
 
 
+
         public int GetVocabSize()
         {
             return vocab.Count;
         }
+
+
+
 
         public int[] Encode(string text)
         {
@@ -439,7 +451,6 @@ namespace BytePairEncoding
 
             return encodedTokens.ToArray();
         }
-
         public string Decode(int[] ids)
         {
             List<string> tokens = new List<string>();
@@ -507,6 +518,10 @@ namespace BytePairEncoding
             tokens.RemoveAll(token => token == "<PAD>");
             return string.Join("", tokens);
         }
+
+
+
+
         public int[] TokeniseAndCreateBins(string fileName, double trainRatio = 0.9)
         {
             string text = File.ReadAllText(fileName);
