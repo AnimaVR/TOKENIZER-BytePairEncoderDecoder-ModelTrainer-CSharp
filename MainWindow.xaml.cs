@@ -62,7 +62,7 @@ namespace BytePairEncoding
         private void TokenizeData_Click(object sender, RoutedEventArgs e)
         {
             vocabSizeTextBlock.Text = "Tokenising and saving training and validation data to bins";
-            string fileName = "input.txt";
+            string fileName = "output.txt";
             int[] valIds = bpe.TokeniseAndCreateBins(fileName, 0.9);
             string valBinContent = string.Join(" ", valIds);
             valBinTextBlock.Text = valBinContent;
@@ -79,7 +79,7 @@ namespace BytePairEncoding
             Buffer.BlockCopy(trainBytes, 0, trainIds, 0, trainBytes.Length);
 
             // Define the block size
-            int blockSize = 1024;
+            int blockSize = 4096;
             
             int[] blockOfIds = trainIds.Take(blockSize).ToArray();
 

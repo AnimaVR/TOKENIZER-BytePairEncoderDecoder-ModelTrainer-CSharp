@@ -9,14 +9,14 @@
     <Grid>
         <Button x:Name="startButton" Content="Start Training" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="200" Click="startTrainingButton_Click"/>
         <TextBlock x:Name="vocabSizeTextBlock" Margin="10,0,421,95" TextWrapping="Wrap" Text="" Height="35" VerticalAlignment="Bottom"/>
-        <Button x:Name="decodeButton" Content="Decode" HorizontalAlignment="Left" Margin="10,0,0,48" Width="111" Click="decodeButton_Click" Height="30" VerticalAlignment="Bottom"/>
-        <TextBlock x:Name="decodedTextBlock" Margin="445,0,10,45" TextWrapping="Wrap" Text="" Height="33" VerticalAlignment="Bottom" Foreground="#FFFDFDFD" Background="#FF313131"/>
-        <TextBox x:Name="inputTextBox" Margin="126,0,10,10" TextWrapping="Wrap" Text="" Height="30" VerticalAlignment="Bottom"/>
+        <Button x:Name="decodeButton" Content="Decode" HorizontalAlignment="Left" Margin="10,0,0,45" Width="111" Click="decodeButton_Click" Height="33" VerticalAlignment="Bottom"/>
+        <TextBlock x:Name="decodedTextBlock" Margin="471,0,10,45" TextWrapping="Wrap" Text="" Height="33" VerticalAlignment="Bottom" Foreground="#FFFDFDFD" Background="#FF313131" Padding="10,10,10,10"/>
+        <TextBox x:Name="inputTextBox" Margin="126,0,10,10" TextWrapping="Wrap" Text="" Height="30" VerticalAlignment="Bottom" Padding="10,2,4,8" UseLayoutRounding="True"/>
         <Button x:Name="encodeButton" Content="Encode" Margin="10,0,0,10" Click="encodeButton_Click" Height="29" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="111"/>
-        <TextBlock x:Name="encodedTextBlock" Margin="126,0,0,45" TextWrapping="Wrap" Text="" Height="33" VerticalAlignment="Bottom" Foreground="White" Background="Black" HorizontalAlignment="Left" Width="319"/>
-        <TextBlock x:Name="valBinTextBlock" Margin="471,44,10,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Height="295" Background="Black" Foreground="White"/>
+        <TextBlock x:Name="encodedTextBlock" Margin="126,0,0,45" TextWrapping="Wrap" Text="" Height="33" VerticalAlignment="Bottom" Foreground="White" Background="Black" HorizontalAlignment="Left" Width="340" Padding="10,10,10,10"/>
+        <TextBlock x:Name="valBinTextBlock" Margin="471,37,10,89" TextWrapping="Wrap" Text="" Background="Black" Foreground="White" Padding="10,10,10,10"/>
         <Button x:Name="LoadModelButton" Content="Load Model" HorizontalAlignment="Left" Margin="215,10,0,0" VerticalAlignment="Top" Width="100" Click="LoadModelButton_Click"/>
-        <Button x:Name="CreateTrainValBins" Content="TokenizeNMakeBins" HorizontalAlignment="Left" Margin="471,10,0,0" VerticalAlignment="Top" Width="199" Click="TokenizeData_Click"/>
-        <Button x:Name="sampleButton" Content="Sample from Train" Click="sampleButton_Click" Margin="675,7,0,0" Height="25" VerticalAlignment="Top" HorizontalAlignment="Left" Width="115" />
+        <Button x:Name="CreateTrainValBins" Content="TokenizeNMakeBins" Margin="0,7,130,0" VerticalAlignment="Top" Click="TokenizeData_Click" HorizontalAlignment="Right" Width="199" Height="24"/>
+        <Button x:Name="sampleButton" Content="Sample Bin" Click="sampleButton_Click" Margin="0,7,10,0" Height="25" VerticalAlignment="Top" HorizontalAlignment="Right" Width="115" />
     </Grid>
 </Window>
