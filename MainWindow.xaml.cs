@@ -10,12 +10,13 @@ namespace BytePairEncoding
         private int[] encodedIds;
         EncodeDecode encodedecode;
         BPE bpe;
-       
+        TokenizeandBin tokenizeandbin;
         public MainWindow()
         {
             InitializeComponent();
             bpe = new BPE();
             encodedecode = new EncodeDecode(bpe);
+            tokenizeandbin = new TokenizeandBin(bpe);
         }
 
 
@@ -36,7 +37,7 @@ namespace BytePairEncoding
         private async void startTrainingButton_Click(object sender, RoutedEventArgs e)
         {
             vocabSizeTextBlock.Text = "Training the model, please wait";
-            await bpe.TrainAsync("input.txt", 25, 0);
+            await bpe.TrainAsync("input.txt", 5, 0);
             vocabSizeTextBlock.Text = "Training complete, vocabulary size of model = " + bpe.GetVocabSize().ToString() + "+1 for the end of line spaces";
            
         }
@@ -65,8 +66,8 @@ namespace BytePairEncoding
         private void TokenizeData_Click(object sender, RoutedEventArgs e)
         {
             vocabSizeTextBlock.Text = "Tokenising and saving training and validation data to bins";
-            string fileName = "output.txt";
-            int[] valIds = encodedecode.TokeniseAndCreateBins(fileName, 0.9);
+            string fileName = "input.txt";
+            int[] valIds = tokenizeandbin.TokeniseAndCreateBins(fileName, 0.9);
             string valBinContent = string.Join(" ", valIds);
             valBinTextBlock.Text = valBinContent;
             vocabSizeTextBlock.Text = "Tokenisation and bin saving complete";
