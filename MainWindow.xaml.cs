@@ -60,7 +60,6 @@ namespace BytePairEncoding
         }
 
 
-
         private void TokenizeData_Click(object sender, RoutedEventArgs e)
         {
             vocabSizeTextBlock.Text = "Tokenising and saving training and validation data to bins";

@@ -475,7 +475,7 @@ namespace BytePairEncoding
                 }
                 else if (tokens[i] == "<UNK>")
                 {
-                    tokens[i] = "\n";  // Replace "<UNK>" with newline character
+                    tokens[i] = "";  // Replace "<UNK>" with newline character
                     i++;
                 }
                 else if (tokens[i] == "<NEWLINE>")
