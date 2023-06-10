@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Windows;
 using System;
+using System.Linq;
 
 namespace BytePairEncoding
 {
@@ -17,7 +18,7 @@ namespace BytePairEncoding
 
         private void LoadModelButton_Click(object sender, RoutedEventArgs e)
         {
-            string modelPath = "model.json";
+            string modelPath = "model.txt";
             if (File.Exists(modelPath))
             {
                 bpe.LoadModel(modelPath);
@@ -82,22 +83,25 @@ namespace BytePairEncoding
             // Define the block size
             int blockSize = 2048;
 
-            // Sample a random block start index
-            Random random = new Random();
-            int randomIndex = random.Next(0, trainIds.Length / blockSize) * blockSize;
+            if (trainIds.Length >= blockSize)
+            {
+                // Get the first block of IDs
+                int[] blockOfIds = trainIds.Take(blockSize).ToArray();
 
-            // Get the block of IDs at the random index
-            int[] blockOfIds = new int[blockSize];
-            Array.Copy(trainIds, randomIndex, blockOfIds, 0, blockSize);
+                // Decode the block of IDs
+                string decodedText = bpe.Decode(blockOfIds);
 
-            // Decode the block of IDs
-            string decodedText = bpe.Decode(blockOfIds);
-
-            // decodedText = decodedText.Replace("<UNK>", "");  // this needs a fix, we did fix it but by replacing <UNK> with \n. This is something that will come back to bite me i am sure of it.
-
-            // Display the decoded text
-            vocabSizeTextBlock.Text = decodedText;
+                // Display the decoded text
+                valBinTextBlock.Text = decodedText;
+            }
+            else
+            {
+                // Handle the case where there are not enough IDs to form a full block
+                // You can display an error message or take appropriate action
+                // ...
+            }
         }
+
 
 
 

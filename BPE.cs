@@ -25,19 +25,102 @@ namespace BytePairEncoding
                 writer.WriteLine("Vocabulary:");
                 foreach (DictionaryEntry entry in vocab)
                 {
-                    writer.WriteLine($"{entry.Key}\t{entry.Value}");
+                    writer.WriteLine($"{entry.Key},{entry.Value}");
                 }
 
                 writer.WriteLine("Merge Pairs:");
                 foreach (DictionaryEntry entry in mergePairs)
                 {
-                    writer.WriteLine($"{entry.Key}\t{entry.Value}");
+                    writer.WriteLine($"{entry.Key},{entry.Value}");
                 }
 
                 writer.WriteLine("Token to ID Mappings:");
                 foreach (var pair in token2id)
                 {
-                    writer.WriteLine($"{pair.Key}\t{pair.Value}");
+                    writer.WriteLine($"{pair.Key},{pair.Value}");
+                }
+            }
+        }
+
+        public void LoadModel(string filePath)
+        {
+            vocab.Clear();
+            mergePairs.Clear();
+            token2id.Clear();
+            tokenCount = 0; // Reset the token count
+
+            vocab["<UNK>"] = 0;
+            token2id.Add(new KeyValuePair<string, int>("<UNK>", 0));
+            vocab["<PAD>"] = 1;
+            token2id.Add(new KeyValuePair<string, int>("<PAD>", 1));
+            vocab["<NEWLINE>"] = 2;
+            token2id.Add(new KeyValuePair<string, int>("<NEWLINE>", 2));
+            tokenCount = 3;
+
+            using (StreamReader reader = new StreamReader(filePath))
+            {
+                string section = "";
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (line.StartsWith("Vocabulary:"))
+                    {
+                        section = "Vocabulary";
+                    }
+                    else if (line.StartsWith("Merge Pairs:"))
+                    {
+                        section = "MergePairs";
+                    }
+                    else if (line.StartsWith("Token to ID Mappings:"))
+                    {
+                        section = "TokenToIdMappings";
+                    }
+                    else
+                    {
+                        switch (section)
+                        {
+                            case "Vocabulary":
+                                {
+                                    string[] parts = line.Split(',');
+                                    if (parts.Length == 2 && int.TryParse(parts[1], out int count))
+                                    {
+                                        if (!vocab.Contains(parts[0])) // Check if key already exists
+                                        {
+                                            vocab.Add(parts[0], count);
+                                        }
+                                    }
+                                    break;
+                                }
+                            case "MergePairs":
+                                {
+                                    string[] parts = line.Split(',');
+                                    if (parts.Length == 2)
+                                    {
+                                        if (!mergePairs.Contains(parts[0])) // Check if key already exists
+                                        {
+                                            mergePairs.Add(parts[0], parts[1]);
+                                        }
+                                    }
+                                    break;
+                                }
+                            case "TokenToIdMappings":
+                                {
+                                    string[] parts = line.Split(',');
+                                    if (parts.Length == 2 && int.TryParse(parts[1], out int id))
+                                    {
+                                        if (!token2id.Any(kv => kv.Key == parts[0])) // Check if key already exists
+                                        {
+                                            token2id.Add(new KeyValuePair<string, int>(parts[0], id));
+                                            if (id > tokenCount)
+                                            {
+                                                tokenCount = id + 1; // Update the token count
+                                            }
+                                        }
+                                    }
+                                    break;
+                                }
+                        }
+                    }
                 }
             }
         }
@@ -59,7 +142,11 @@ namespace BytePairEncoding
             token2id.Add(new KeyValuePair<string, int>("<UNK>", 0));
             vocab["<PAD>"] = 1;
             token2id.Add(new KeyValuePair<string, int>("<PAD>", 1));
-            tokenCount = 2;
+            vocab["<NEWLINE>"] = 2;
+            token2id.Add(new KeyValuePair<string, int>("<NEWLINE>", 2));
+            tokenCount = 3;
+
+
 
             for (int i = 0; i < numMerges; i++)
             {
@@ -94,9 +181,8 @@ namespace BytePairEncoding
                 }
             }
 
-            SaveModel("model.json");
+            SaveModel("model.txt");
         }
-
         private async Task LoadVocabAsync(List<List<string>> words, int minFrequency)
         {
             object lockObject = new object();
@@ -301,7 +387,7 @@ namespace BytePairEncoding
 
         public int[] Encode(string text)
         {
-            string[] words = text.Replace("\n", "").Split(' ');
+            string[] words = text.Split(' ');
 
             List<int> encodedTokens = new List<int>();
 
@@ -326,6 +412,11 @@ namespace BytePairEncoding
                                 bestToken = pair.Value.ToString();
                             }
                         }
+                    }
+
+                    if (bestToken == "\n")
+                    {
+                        bestToken = "<NEWLINE>";
                     }
 
                     if (!token2id.Any(kv => kv.Key == bestToken))
@@ -388,6 +479,11 @@ namespace BytePairEncoding
                     tokens[i] = "\n";  // Replace "<UNK>" with newline character
                     i++;
                 }
+                else if (tokens[i] == "<NEWLINE>")
+                {
+                    tokens[i] = "\n";  // Replace "<NEWLINE>" with newline character
+                    i++;
+                }
                 else
                 {
                     bool foundPair = false;
@@ -414,29 +510,25 @@ namespace BytePairEncoding
             tokens.RemoveAll(token => token == "<PAD>");
             return string.Join("", tokens);
         }
-
         public int[] TokeniseAndCreateBins(string fileName, double trainRatio = 0.9)
         {
             string text = File.ReadAllText(fileName);
-           text = text.Replace("\n", " ");
-            string[] words = text.Split(' ');
+          
+            int[] encodedWords = Encode(text);
 
             int trainChunkSize = 2048;
             int valChunkSize = 2048;
 
-            int splitIndex = (int)(words.Length * trainRatio);
+            int splitIndex = (int)(encodedWords.Length * trainRatio);
 
-            string[] trainWords = words.Take(splitIndex).ToArray();
-            string[] valWords = words.Skip(splitIndex).ToArray();
+            int[] trainWords = encodedWords.Take(splitIndex).ToArray();
+            int[] valWords = encodedWords.Skip(splitIndex).ToArray();
 
-            int[] encodedTrain = Encode(string.Join(" ", trainWords));
-            int[] encodedVal = Encode(string.Join(" ", valWords));
+            int trainNumTokens = (int)Math.Ceiling(trainWords.Length / (double)trainChunkSize) * trainChunkSize;
+            int valNumTokens = (int)Math.Ceiling(valWords.Length / (double)valChunkSize) * valChunkSize;
 
-            int trainNumTokens = (int)Math.Ceiling(encodedTrain.Length / (double)trainChunkSize) * trainChunkSize;
-            int valNumTokens = (int)Math.Ceiling(encodedVal.Length / (double)valChunkSize) * valChunkSize;
-
-            int[] trainIds = AdjustTokensToChunkSize(encodedTrain, trainChunkSize, trainNumTokens);
-            int[] valIds = AdjustTokensToChunkSize(encodedVal, valChunkSize, valNumTokens);
+            int[] trainIds = AdjustTokensToChunkSize(trainWords, trainChunkSize, trainNumTokens);
+            int[] valIds = AdjustTokensToChunkSize(valWords, valChunkSize, valNumTokens);
 
             using (BinaryWriter writer = new BinaryWriter(File.OpenWrite("train.bin")))
             {
@@ -485,84 +577,6 @@ namespace BytePairEncoding
 
 
 
-        public void LoadModel(string filePath)
-        {
-            vocab.Clear();
-            mergePairs.Clear();
-            token2id.Clear();
-            tokenCount = 0; // Reset the token count
-            vocab["<UNK>"] = 0;
-            token2id.Add(new KeyValuePair<string, int>("<UNK>", 0));
-            vocab["<PAD>"] = 1;
-            token2id.Add(new KeyValuePair<string, int>("<PAD>", 1));
-            tokenCount = 2;
-            using (StreamReader reader = new StreamReader(filePath))
-            {
-                string section = "";
-                string line;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    if (line.StartsWith("Vocabulary:"))
-                    {
-                        section = "Vocabulary";
-                    }
-                    else if (line.StartsWith("Merge Pairs:"))
-                    {
-                        section = "MergePairs";
-                    }
-                    else if (line.StartsWith("Token to ID Mappings:"))
-                    {
-                        section = "TokenToIdMappings";
-                    }
-                    else
-                    {
-                        switch (section)
-                        {
-                            case "Vocabulary":
-                                {
-                                    string[] parts = line.Split('\t');
-                                    if (parts.Length == 2 && int.TryParse(parts[1], out int count))
-                                    {
-                                        if (!vocab.Contains(parts[0])) // Check if key already exists
-                                        {
-                                            vocab.Add(parts[0], count);
-                                        }
-                                    }
-                                    break;
-                                }
-                            case "MergePairs":
-                                {
-                                    string[] parts = line.Split('\t');
-                                    if (parts.Length == 2)
-                                    {
-                                        if (!mergePairs.Contains(parts[0])) // Check if key already exists
-                                        {
-                                            mergePairs.Add(parts[0], parts[1]);
-                                        }
-                                    }
-                                    break;
-                                }
-                            case "TokenToIdMappings":
-                                {
-                                    string[] parts = line.Split('\t');
-                                    if (parts.Length == 2 && int.TryParse(parts[1], out int id))
-                                    {
-                                        if (!token2id.Any(kv => kv.Key == parts[0])) // Check if key already exists
-                                        {
-                                            token2id.Add(new KeyValuePair<string, int>(parts[0], id));
-                                            if (id > tokenCount)
-                                            {
-                                                tokenCount = id + 1; // Update the token count
-                                            }
-                                        }
-                                    }
-                                    break;
-                                }
-                        }
-                    }
-                }
-            }
-           
-        }
+
     }
 }
