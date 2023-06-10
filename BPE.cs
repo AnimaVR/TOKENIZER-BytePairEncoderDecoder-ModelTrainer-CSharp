@@ -359,28 +359,8 @@ namespace BytePairEncoding
                     }
                 }
             }
-
-            lock (vocab)
-            {
-                if (vocab.Contains(mostFreqPairKey[0].ToString()))
-                {
-                    vocab[mostFreqPairKey[0].ToString()] = (int)vocab[mostFreqPairKey[0].ToString()] - mostFreqPairValue;
-                    if ((int)vocab[mostFreqPairKey[0].ToString()] <= 0)
-                    {
-                        vocab.Remove(mostFreqPairKey[0].ToString());
-                    }
-                }
-
-                if (vocab.Contains(mostFreqPairKey[1].ToString()))
-                {
-                    vocab[mostFreqPairKey[1].ToString()] = (int)vocab[mostFreqPairKey[1].ToString()] - mostFreqPairValue;
-                    if ((int)vocab[mostFreqPairKey[1].ToString()] <= 0)
-                    {
-                        vocab.Remove(mostFreqPairKey[1].ToString());
-                    }
-                }
-            }
         }
+
 
 
         public int GetVocabSize()
