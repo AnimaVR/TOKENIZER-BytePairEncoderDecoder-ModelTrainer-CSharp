@@ -182,6 +182,10 @@ namespace BytePairEncoding
             }
 
             SaveModel("model.txt");
+
+
+            LoadModel("model.txt");  // this is a work around to allow the model to be consistant between closing after training it into memory.
+                                     // memory is saved slightly differently into file randomy so when we load it its different and we need to tokenise again.... annyoingly!!!
         }
         private async Task LoadVocabAsync(List<List<string>> words, int minFrequency)
         {
