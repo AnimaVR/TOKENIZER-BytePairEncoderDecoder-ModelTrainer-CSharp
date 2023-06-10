@@ -20,6 +20,12 @@ namespace BytePairEncoding
 
         public void SaveModel(string filePath)
         {
+            int lastValue = token2id.Max(pair => pair.Value);
+            int newValue = lastValue + 1;
+
+            // Add a new entry with key as space and value as newValue
+            token2id.Add(new KeyValuePair<string, int>(" ", newValue));
+
             using (StreamWriter writer = new StreamWriter(filePath))
             {
                 writer.WriteLine("Vocabulary:");
@@ -41,6 +47,7 @@ namespace BytePairEncoding
                 }
             }
         }
+
 
         public void LoadModel(string filePath)
         {
@@ -134,8 +141,16 @@ namespace BytePairEncoding
             string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
             string text = await File.ReadAllTextAsync(filePath);
 
-            var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries)
-                            .Select(word => new List<string>(word.Select(ch => ch.ToString()))).ToList();
+            // Handle spaces at the end of lines here
+            string[] lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            var words = new List<List<string>>();
+            foreach (var line in lines)
+            {
+                var lineWords = line.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                                    .Select(word => new List<string>(word.Select(ch => ch.ToString()))).ToList();
+                lineWords.Add(new List<string> { "<SPACE>" });
+                words.AddRange(lineWords);
+            }
 
             await LoadVocabAsync(words, minFrequency);
             vocab["<UNK>"] = 0;
@@ -145,8 +160,6 @@ namespace BytePairEncoding
             vocab["<NEWLINE>"] = 2;
             token2id.Add(new KeyValuePair<string, int>("<NEWLINE>", 2));
             tokenCount = 3;
-
-
 
             for (int i = 0; i < numMerges; i++)
             {
@@ -183,10 +196,11 @@ namespace BytePairEncoding
 
             SaveModel("model.txt");
 
-
-            LoadModel("model.txt");  // this is a work around to allow the model to be consistant between closing after training it into memory.
-                                     // memory is saved slightly differently into file randomy so when we load it its different and we need to tokenise again.... annyoingly!!!
+            LoadModel("model.txt");  // this is a workaround to allow the model to be consistent between closing after training it into memory.
+                                     // memory is saved slightly differently into file randomly so when we load it it's different and we need to tokenize again.... annoyingly!!!
         }
+
+
         private async Task LoadVocabAsync(List<List<string>> words, int minFrequency)
         {
             object lockObject = new object();
@@ -213,6 +227,7 @@ namespace BytePairEncoding
                 {
                     localVocab["<SPACE>"] = (int)localVocab["<SPACE>"] + 1;
                 }
+
                 lock (lockObject)
                 {
                     foreach (DictionaryEntry pair in localVocab)

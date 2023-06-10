@@ -32,8 +32,8 @@ namespace BytePairEncoding
         private async void startTrainingButton_Click(object sender, RoutedEventArgs e)
         {
             vocabSizeTextBlock.Text = "Training the model, please wait";
-            await bpe.TrainAsync("input.txt", 15, 1);
-            vocabSizeTextBlock.Text = "Training complete, vocabulary size of model = " + bpe.GetVocabSize().ToString();
+            await bpe.TrainAsync("input.txt", 10, 1);
+            vocabSizeTextBlock.Text = "Training complete, vocabulary size of model = " + bpe.GetVocabSize().ToString() + "+1 for the end of line spaces";
            
         }
 
