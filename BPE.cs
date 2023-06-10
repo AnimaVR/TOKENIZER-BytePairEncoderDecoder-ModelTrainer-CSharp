@@ -29,31 +29,32 @@ namespace BytePairEncoding
             token2id.Add(new KeyValuePair<string, int>(" ", spaceValue));
 
             // Add a new entry with key as comma and value as commaValue
-            token2id.Add(new KeyValuePair<string, int>(",", commaValue));
+          //  token2id.Add(new KeyValuePair<string, int>(",", commaValue));
 
-            token2id.Add(new KeyValuePair<string, int>(",", commaValue2));
+         //   token2id.Add(new KeyValuePair<string, int>(",", commaValue2));
 
             using (StreamWriter writer = new StreamWriter(filePath))
             {
                 writer.WriteLine("Vocabulary:");
                 foreach (DictionaryEntry entry in vocab)
                 {
-                    writer.WriteLine($"{entry.Key},{entry.Value}");
+                    writer.WriteLine($"{entry.Key}|{entry.Value}"); // Use '|' as the delimiter
                 }
 
                 writer.WriteLine("Merge Pairs:");
                 foreach (DictionaryEntry entry in mergePairs)
                 {
-                    writer.WriteLine($"{entry.Key},{entry.Value}");
+                    writer.WriteLine($"{entry.Key}|{entry.Value}"); // Use '|' as the delimiter
                 }
 
                 writer.WriteLine("Token to ID Mappings:");
                 foreach (var pair in token2id)
                 {
-                    writer.WriteLine($"{pair.Key},{pair.Value}");
+                    writer.WriteLine($"{pair.Key}|{pair.Value}"); // Use '|' as the delimiter
                 }
             }
         }
+
         public void LoadModel(string filePath)
         {
             vocab.Clear();
@@ -93,7 +94,7 @@ namespace BytePairEncoding
                         {
                             case "Vocabulary":
                                 {
-                                    string[] parts = line.Split(',');
+                                    string[] parts = line.Split('|'); // Use '|' as the delimiter
                                     if (parts.Length == 2 && int.TryParse(parts[1], out int count))
                                     {
                                         if (!vocab.Contains(parts[0])) // Check if key already exists
@@ -105,7 +106,7 @@ namespace BytePairEncoding
                                 }
                             case "MergePairs":
                                 {
-                                    string[] parts = line.Split(',');
+                                    string[] parts = line.Split('|'); // Use '|' as the delimiter
                                     if (parts.Length == 2)
                                     {
                                         if (!mergePairs.Contains(parts[0])) // Check if key already exists
@@ -117,7 +118,7 @@ namespace BytePairEncoding
                                 }
                             case "TokenToIdMappings":
                                 {
-                                    string[] parts = line.Split(',');
+                                    string[] parts = line.Split('|'); // Use '|' as the delimiter
                                     if (parts.Length == 2 && int.TryParse(parts[1], out int id))
                                     {
                                         if (!token2id.Any(kv => kv.Key == parts[0])) // Check if key already exists
@@ -126,17 +127,6 @@ namespace BytePairEncoding
                                             if (id > tokenCount)
                                             {
                                                 tokenCount = id + 1; // Update the token count
-                                            }
-                                        }
-                                    }
-                                    else if (parts.Length == 2 && int.TryParse(parts[0], out int customId)) // Handle custom token ID
-                                    {
-                                        if (!token2id.Any(kv => kv.Value == customId)) // Check if ID already exists
-                                        {
-                                            token2id.Add(new KeyValuePair<string, int>(parts[1], customId));
-                                            if (customId > tokenCount)
-                                            {
-                                                tokenCount = customId + 1; // Update the token count
                                             }
                                         }
                                     }
@@ -525,7 +515,7 @@ namespace BytePairEncoding
         public int[] TokeniseAndCreateBins(string fileName, double trainRatio = 0.9)
         {
             string text = File.ReadAllText(fileName);
-          
+
             int[] encodedWords = Encode(text);
 
             int trainChunkSize = 2048;
@@ -560,6 +550,7 @@ namespace BytePairEncoding
 
             return valIds;
         }
+
         private int[] AdjustTokensToChunkSize(int[] tokens, int chunkSize, int numTokens)
         {
             if (tokens.Length < numTokens)
@@ -567,7 +558,7 @@ namespace BytePairEncoding
                 int[] adjustedTokens = new int[numTokens];
                 Array.Copy(tokens, adjustedTokens, tokens.Length);
 
-                int paddingToken = token2id.Single(kv => kv.Key == "<PAD>").Value;  
+                int paddingToken = token2id.Single(kv => kv.Key == "<PAD>").Value;
                 for (int i = tokens.Length; i < numTokens; i++)
                 {
                     adjustedTokens[i] = paddingToken;
@@ -586,6 +577,7 @@ namespace BytePairEncoding
                 return tokens;
             }
         }
+
 
 
 
