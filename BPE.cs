@@ -384,7 +384,6 @@ namespace BytePairEncoding
             return vocab.Count;
         }
 
-
         public int[] Encode(string text)
         {
             string[] words = text.Split(' ');
