@@ -16,6 +16,8 @@ namespace BytePairEncoding
         private OrderedDictionary vocab = new OrderedDictionary();
         private OrderedDictionary mergePairs = new OrderedDictionary();
         private int tokenCount = 0;
+
+
         public void SaveModel(string filePath)
         {
             using (StreamWriter writer = new StreamWriter(filePath))
@@ -39,6 +41,8 @@ namespace BytePairEncoding
                 }
             }
         }
+
+
         public async Task TrainAsync(string fileName, int numMerges, int minFrequency)
         {
             vocab.Clear();
@@ -226,7 +230,6 @@ namespace BytePairEncoding
 
             return (pairCounts, mostFreqPair);
         }
-
         private void MergeMostFrequentPair(List<KeyValuePair<string, int>> pairCounts, KeyValuePair<string, int>? mostFreqPair, List<List<string>> words)
         {
             if (mostFreqPair == null)
@@ -290,7 +293,6 @@ namespace BytePairEncoding
         }
 
 
-
         public int GetVocabSize()
         {
             return vocab.Count;
@@ -305,29 +307,51 @@ namespace BytePairEncoding
 
             foreach (var word in words)
             {
-                foreach (var ch in word)
-                {
-                    string token = ch.ToString();
+                List<string> wordList = word.Select(ch => ch.ToString()).ToList();
 
-                    if (!token2id.Any(kv => kv.Key == token))
+                for (int i = 0; i < wordList.Count; i++)
+                {
+                    string bestToken = wordList[i];
+                    int bestLength = 1;
+
+                    foreach (DictionaryEntry pair in mergePairs)
                     {
-                        token2id.Add(new KeyValuePair<string, int>(token, tokenCount));
+                        string key = pair.Key.ToString();
+                        if (key.Length > bestLength && i + key.Length <= wordList.Count)
+                        {
+                            string substring = string.Join("", wordList.GetRange(i, key.Length));
+                            if (substring == key)
+                            {
+                                bestLength = key.Length;
+                                bestToken = pair.Value.ToString();
+                            }
+                        }
+                    }
+
+                    if (!token2id.Any(kv => kv.Key == bestToken))
+                    {
+                        token2id.Add(new KeyValuePair<string, int>(bestToken, tokenCount));
                         tokenCount++;
                     }
 
-                    encodedTokens.Add(token2id.Single(kv => kv.Key == token).Value);
+                    encodedTokens.Add(token2id.Single(kv => kv.Key == bestToken).Value);
+                    i += bestLength - 1;
                 }
 
-                encodedTokens.Add(token2id.Single(kv => kv.Key == "<SPACE>").Value);
+                if (token2id.Any(kv => kv.Key == "<SPACE>"))
+                {
+                    encodedTokens.Add(token2id.Single(kv => kv.Key == "<SPACE>").Value);
+                }
             }
 
-            if (encodedTokens.Count > 0 && encodedTokens[encodedTokens.Count - 1] == token2id.Single(kv => kv.Key == "<SPACE>").Value)
+            if (encodedTokens.Count > 0 && token2id.Any(kv => kv.Key == "<SPACE>") && encodedTokens[^1] == token2id.Single(kv => kv.Key == "<SPACE>").Value)
             {
                 encodedTokens.RemoveAt(encodedTokens.Count - 1);
             }
 
             return encodedTokens.ToArray();
         }
+
         public string Decode(int[] ids)
         {
             List<string> tokens = new List<string>();
@@ -540,7 +564,5 @@ namespace BytePairEncoding
             }
            
         }
-
-
     }
 }

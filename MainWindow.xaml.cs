@@ -31,7 +31,7 @@ namespace BytePairEncoding
         private async void startTrainingButton_Click(object sender, RoutedEventArgs e)
         {
             vocabSizeTextBlock.Text = "Training the model, please wait";
-            await bpe.TrainAsync("input.txt", 2, 1);
+            await bpe.TrainAsync("input.txt", 3, 1);
             vocabSizeTextBlock.Text = "Training complete, vocabulary size of model = " + bpe.GetVocabSize().ToString();
            
         }
@@ -96,7 +96,7 @@ namespace BytePairEncoding
             // decodedText = decodedText.Replace("<UNK>", "");  // this needs a fix, we did fix it but by replacing <UNK> with \n. This is something that will come back to bite me i am sure of it.
 
             // Display the decoded text
-            decodedTextBlock.Text = decodedText;
+            vocabSizeTextBlock.Text = decodedText;
         }
 
 

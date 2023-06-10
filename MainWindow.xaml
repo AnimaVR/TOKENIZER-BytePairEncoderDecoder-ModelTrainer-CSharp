@@ -16,7 +16,7 @@
         <TextBlock x:Name="encodedTextBlock" Margin="126,0,0,45" TextWrapping="Wrap" Text="" Height="33" VerticalAlignment="Bottom" Foreground="White" Background="Black" HorizontalAlignment="Left" Width="319"/>
         <TextBlock x:Name="valBinTextBlock" Margin="471,44,10,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Height="295" Background="Black" Foreground="White"/>
         <Button x:Name="LoadModelButton" Content="Load Model" HorizontalAlignment="Left" Margin="215,10,0,0" VerticalAlignment="Top" Width="100" Click="LoadModelButton_Click"/>
-        <Button x:Name="CreateTrainValBins" Content="TokenizeNMakeBins" HorizontalAlignment="Left" Margin="471,10,0,0" VerticalAlignment="Top" Width="319" Click="TokenizeData_Click"/>
-        <Button x:Name="sampleButton" Content="Sample from Train" Click="sampleButton_Click" Margin="15,200,0,0" Height="25" VerticalAlignment="Top" HorizontalAlignment="Left" Width="314" />
+        <Button x:Name="CreateTrainValBins" Content="TokenizeNMakeBins" HorizontalAlignment="Left" Margin="471,10,0,0" VerticalAlignment="Top" Width="199" Click="TokenizeData_Click"/>
+        <Button x:Name="sampleButton" Content="Sample from Train" Click="sampleButton_Click" Margin="675,7,0,0" Height="25" VerticalAlignment="Top" HorizontalAlignment="Left" Width="115" />
     </Grid>
 </Window>
