@@ -22,35 +22,28 @@ namespace BytePairEncoding
         {
             int lastValue = token2id.Max(pair => pair.Value);
             int spaceValue = lastValue + 1;
-            int commaValue = lastValue + 2;
-            int commaValue2 = lastValue + 3;
 
             // Add a new entry with key as space and value as spaceValue
             token2id.Add(new KeyValuePair<string, int>(" ", spaceValue));
-
-            // Add a new entry with key as comma and value as commaValue
-          //  token2id.Add(new KeyValuePair<string, int>(",", commaValue));
-
-         //   token2id.Add(new KeyValuePair<string, int>(",", commaValue2));
 
             using (StreamWriter writer = new StreamWriter(filePath))
             {
                 writer.WriteLine("Vocabulary:");
                 foreach (DictionaryEntry entry in vocab)
                 {
-                    writer.WriteLine($"{entry.Key}|{entry.Value}"); // Use '|' as the delimiter
+                    writer.WriteLine($"{entry.Key}¦{entry.Value}"); // Use '|' as the delimiter
                 }
 
                 writer.WriteLine("Merge Pairs:");
                 foreach (DictionaryEntry entry in mergePairs)
                 {
-                    writer.WriteLine($"{entry.Key}|{entry.Value}"); // Use '|' as the delimiter
+                    writer.WriteLine($"{entry.Key}¦{entry.Value}"); // Use '|' as the delimiter
                 }
 
                 writer.WriteLine("Token to ID Mappings:");
                 foreach (var pair in token2id)
                 {
-                    writer.WriteLine($"{pair.Key}|{pair.Value}"); // Use '|' as the delimiter
+                    writer.WriteLine($"{pair.Key}¦{pair.Value}"); // Use '|' as the delimiter
                 }
             }
         }
@@ -94,7 +87,7 @@ namespace BytePairEncoding
                         {
                             case "Vocabulary":
                                 {
-                                    string[] parts = line.Split('|'); // Use '|' as the delimiter
+                                    string[] parts = line.Split('¦'); // Use '|' as the delimiter
                                     if (parts.Length == 2 && int.TryParse(parts[1], out int count))
                                     {
                                         if (!vocab.Contains(parts[0])) // Check if key already exists
@@ -106,7 +99,7 @@ namespace BytePairEncoding
                                 }
                             case "MergePairs":
                                 {
-                                    string[] parts = line.Split('|'); // Use '|' as the delimiter
+                                    string[] parts = line.Split('¦'); // Use '|' as the delimiter
                                     if (parts.Length == 2)
                                     {
                                         if (!mergePairs.Contains(parts[0])) // Check if key already exists
@@ -118,7 +111,7 @@ namespace BytePairEncoding
                                 }
                             case "TokenToIdMappings":
                                 {
-                                    string[] parts = line.Split('|'); // Use '|' as the delimiter
+                                    string[] parts = line.Split('¦'); // Use '|' as the delimiter
                                     if (parts.Length == 2 && int.TryParse(parts[1], out int id))
                                     {
                                         if (!token2id.Any(kv => kv.Key == parts[0])) // Check if key already exists
