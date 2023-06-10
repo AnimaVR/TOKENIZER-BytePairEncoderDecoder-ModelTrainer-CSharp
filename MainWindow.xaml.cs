@@ -8,11 +8,14 @@ namespace BytePairEncoding
     public partial class MainWindow : Window
     {
         private int[] encodedIds;
+        EncodeDecode encodedecode;
         BPE bpe;
+       
         public MainWindow()
         {
             InitializeComponent();
             bpe = new BPE();
+            encodedecode = new EncodeDecode(bpe);
         }
 
 
@@ -41,7 +44,7 @@ namespace BytePairEncoding
         private void encodeButton_Click(object sender, RoutedEventArgs e)
         {
             string inputText = inputTextBox.Text;
-            encodedIds = bpe.Encode(inputText);
+            encodedIds = encodedecode.Encode(inputText);
             string encodedText = string.Join(" ", encodedIds);
             encodedTextBlock.Text = encodedText;
         }
@@ -50,7 +53,7 @@ namespace BytePairEncoding
         {
             if (encodedIds != null)
             {
-                string decodedText = bpe.Decode(encodedIds);
+                string decodedText = encodedecode.Decode(encodedIds);
                 decodedTextBlock.Text = decodedText;
             }
             else
@@ -63,7 +66,7 @@ namespace BytePairEncoding
         {
             vocabSizeTextBlock.Text = "Tokenising and saving training and validation data to bins";
             string fileName = "output.txt";
-            int[] valIds = bpe.TokeniseAndCreateBins(fileName, 0.9);
+            int[] valIds = encodedecode.TokeniseAndCreateBins(fileName, 0.9);
             string valBinContent = string.Join(" ", valIds);
             valBinTextBlock.Text = valBinContent;
             vocabSizeTextBlock.Text = "Tokenisation and bin saving complete";
@@ -83,7 +86,7 @@ namespace BytePairEncoding
             
             int[] blockOfIds = trainIds.Take(blockSize).ToArray();
 
-            string decodedText = bpe.Decode(blockOfIds);
+            string decodedText = encodedecode.Decode(blockOfIds);
 
             valBinTextBlock.Text = decodedText;
            
