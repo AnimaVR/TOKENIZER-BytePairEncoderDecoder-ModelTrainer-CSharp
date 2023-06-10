@@ -11,12 +11,14 @@ namespace BytePairEncoding
         EncodeDecode encodedecode;
         BPE bpe;
         TokenizeandBin tokenizeandbin;
+        Train train;
         public MainWindow()
         {
             InitializeComponent();
             bpe = new BPE();
             encodedecode = new EncodeDecode(bpe);
             tokenizeandbin = new TokenizeandBin(bpe);
+            train = new Train(bpe);
         }
 
 
@@ -37,7 +39,7 @@ namespace BytePairEncoding
         private async void startTrainingButton_Click(object sender, RoutedEventArgs e)
         {
             vocabSizeTextBlock.Text = "Training the model, please wait";
-            await bpe.TrainAsync("input.txt", 5, 0);
+            await train.TrainAsync("input.txt", 5, 0);
             vocabSizeTextBlock.Text = "Training complete, vocabulary size of model = " + bpe.GetVocabSize().ToString() + "+1 for the end of line spaces";
            
         }
