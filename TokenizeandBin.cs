@@ -68,30 +68,24 @@ namespace BytePairEncoding
 
         private int[] AdjustTokensToChunkSize(int[] tokens, int chunkSize, int numTokens)
         {
-            if (tokens.Length < numTokens)
-            {
-                int[] adjustedTokens = new int[numTokens];
-                Array.Copy(tokens, adjustedTokens, tokens.Length);
-
-                int paddingToken = token2id.Single(kv => kv.Key == "<PAD>").Value;
-                for (int i = tokens.Length; i < numTokens; i++)
-                {
-                    adjustedTokens[i] = paddingToken;
-                }
-
-                return adjustedTokens;
-            }
-            else if (tokens.Length > numTokens)
-            {
-                int[] adjustedTokens = new int[numTokens];
-                Array.Copy(tokens, adjustedTokens, numTokens);
-                return adjustedTokens;
-            }
-            else
+            if (tokens.Length >= numTokens)
             {
                 return tokens;
             }
+
+            int[] adjustedTokens = new int[numTokens];
+            Array.Copy(tokens, adjustedTokens, tokens.Length);
+
+            int paddingToken = token2id.Single(kv => kv.Key == "<PAD>").Value;
+
+            for (int i = tokens.Length; i < numTokens; i++)
+            {
+                adjustedTokens[i] = paddingToken;
+            }
+
+            return adjustedTokens;
         }
+
 
         private void WriteIdsToBinFile(string fileName, int[] ids)
         {
