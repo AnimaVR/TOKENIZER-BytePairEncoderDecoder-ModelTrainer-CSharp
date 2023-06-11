@@ -22,7 +22,6 @@ namespace BytePairEncoding
             int lastValue = token2id.Max(pair => pair.Value);
             int spaceValue = lastValue + 1;
 
-            // Add a new entry with key as space and value as spaceValue
             token2id.Add(new KeyValuePair<string, int>(" ", spaceValue));
 
             using (StreamWriter writer = new StreamWriter(filePath))
@@ -30,19 +29,19 @@ namespace BytePairEncoding
                 writer.WriteLine("Vocabulary:");
                 foreach (DictionaryEntry entry in vocab)
                 {
-                    writer.WriteLine($"{entry.Key}¦{entry.Value}"); // Use '|' as the delimiter
+                    writer.WriteLine($"{entry.Key}¦{entry.Value}"); 
                 }
 
                 writer.WriteLine("Merge Pairs:");
                 foreach (DictionaryEntry entry in mergePairs)
                 {
-                    writer.WriteLine($"{entry.Key}¦{entry.Value}"); // Use '|' as the delimiter
+                    writer.WriteLine($"{entry.Key}¦{entry.Value}"); 
                 }
 
                 writer.WriteLine("Token to ID Mappings:");
                 foreach (var pair in token2id)
                 {
-                    writer.WriteLine($"{pair.Key}¦{pair.Value}"); // Use '|' as the delimiter
+                    writer.WriteLine($"{pair.Key}¦{pair.Value}");
                 }
             }
         }
@@ -51,7 +50,7 @@ namespace BytePairEncoding
             vocab.Clear();
             mergePairs.Clear();
             token2id.Clear();
-            tokenCount = 0; // Reset the token count
+            tokenCount = 0; 
 
             vocab["<UNK>"] = 0;
             token2id.Add(new KeyValuePair<string, int>("<UNK>", 0));
@@ -85,10 +84,10 @@ namespace BytePairEncoding
                         {
                             case "Vocabulary":
                                 {
-                                    string[] parts = line.Split('¦'); // Use '|' as the delimiter
+                                    string[] parts = line.Split('¦'); 
                                     if (parts.Length == 2 && int.TryParse(parts[1], out int count))
                                     {
-                                        if (!vocab.Contains(parts[0])) // Check if key already exists
+                                        if (!vocab.Contains(parts[0])) 
                                         {
                                             vocab.Add(parts[0], count);
                                         }
@@ -97,10 +96,10 @@ namespace BytePairEncoding
                                 }
                             case "MergePairs":
                                 {
-                                    string[] parts = line.Split('¦'); // Use '|' as the delimiter
+                                    string[] parts = line.Split('¦'); 
                                     if (parts.Length == 2)
                                     {
-                                        if (!mergePairs.Contains(parts[0])) // Check if key already exists
+                                        if (!mergePairs.Contains(parts[0])) 
                                         {
                                             mergePairs.Add(parts[0], parts[1]);
                                         }
@@ -109,15 +108,15 @@ namespace BytePairEncoding
                                 }
                             case "TokenToIdMappings":
                                 {
-                                    string[] parts = line.Split('¦'); // Use '|' as the delimiter
+                                    string[] parts = line.Split('¦'); 
                                     if (parts.Length == 2 && int.TryParse(parts[1], out int id))
                                     {
-                                        if (!token2id.Any(kv => kv.Key == parts[0])) // Check if key already exists
+                                        if (!token2id.Any(kv => kv.Key == parts[0]))
                                         {
                                             token2id.Add(new KeyValuePair<string, int>(parts[0], id));
                                             if (id > tokenCount)
                                             {
-                                                tokenCount = id + 1; // Update the token count
+                                                tokenCount = id + 1;
                                             }
                                         }
                                     }

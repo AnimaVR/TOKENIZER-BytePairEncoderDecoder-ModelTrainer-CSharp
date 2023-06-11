@@ -154,7 +154,7 @@ namespace BytePairEncoding
                     string pair = word[j] + word[j + 1];
 
                     KeyValuePair<string, int>? existingPair = null;
-                    foreach (var kv in localPairCounts)  // Replace LINQ with loop
+                    foreach (var kv in localPairCounts) 
                     {
                         if (kv.Key == pair)
                         {
@@ -179,7 +179,7 @@ namespace BytePairEncoding
                     foreach (var pair in localPairCounts)
                     {
                         KeyValuePair<string, int>? existingPair = null;
-                        foreach (var kv in pairCounts)  // Replace LINQ with loop
+                        foreach (var kv in pairCounts)  
                         {
                             if (kv.Key == pair.Key)
                             {
