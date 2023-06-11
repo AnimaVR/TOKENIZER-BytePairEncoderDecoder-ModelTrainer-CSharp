@@ -17,6 +17,7 @@ namespace BytePairEncoding
         public OrderedDictionary vocab;
         public OrderedDictionary mergePairs;
         public int tokenCount;
+
         public TokenizeandBin(BPE bpe)
         {
             this.bpe = bpe;
@@ -27,43 +28,42 @@ namespace BytePairEncoding
             this.encodeDecode = new EncodeDecode(bpe);
         }
 
-        public int[] TokeniseAndCreateBins(string fileName, double trainRatio = 0.9)
+        private string ReadTextFromFile(string fileName)
         {
-            string text = File.ReadAllText(fileName);
-
-            int[] encodedWords = encodeDecode.Encode(text);
-
-            int trainChunkSize = 2048;
-            int valChunkSize = 2048;
-
-            int splitIndex = (int)(encodedWords.Length * trainRatio);
-
-            int[] trainWords = encodedWords.Take(splitIndex).ToArray();
-            int[] valWords = encodedWords.Skip(splitIndex).ToArray();
-
-            int trainNumTokens = (int)Math.Ceiling(trainWords.Length / (double)trainChunkSize) * trainChunkSize;
-            int valNumTokens = (int)Math.Ceiling(valWords.Length / (double)valChunkSize) * valChunkSize;
-
-            int[] trainIds = AdjustTokensToChunkSize(trainWords, trainChunkSize, trainNumTokens);
-            int[] valIds = AdjustTokensToChunkSize(valWords, valChunkSize, valNumTokens);
-
-            using (BinaryWriter writer = new BinaryWriter(File.OpenWrite("train.bin")))
-            {
-                foreach (int id in trainIds)
-                {
-                    writer.Write(id);
-                }
-            }
-
-            using (BinaryWriter writer = new BinaryWriter(File.OpenWrite("val.bin")))
-            {
-                foreach (int id in valIds)
-                {
-                    writer.Write(id);
-                }
-            }
-
+            return File.ReadAllText(fileName);
+        }
+      
+        public int[] ProcessFile(string fileName, double trainRatio = 0.9)
+        {
+            string text = ReadTextFromFile(fileName);
+            int[] encodedWords = EncodeWords(text);
+            SplitWordsIntoTrainAndVal(encodedWords, trainRatio, out var trainWords, out var valWords);
+            AdjustWordsToChunkSizeAndWriteToFile("train.bin", trainWords);
+            int[] valIds = AdjustWordsToChunkSizeAndWriteToFile("val.bin", valWords);
+          
             return valIds;
+        }
+
+        private int[] AdjustWordsToChunkSizeAndWriteToFile(string fileName, int[] words)
+        {
+            int chunkSize = 2048;
+            int numTokens = (int)Math.Ceiling(words.Length / (double)chunkSize) * chunkSize;
+            int[] adjustedWords = AdjustTokensToChunkSize(words, chunkSize, numTokens);
+            WriteIdsToBinFile(fileName, adjustedWords);
+
+            return adjustedWords; 
+        }
+
+        private int[] EncodeWords(string text)
+        {
+            return encodeDecode.Encode(text);
+        }
+
+        private void SplitWordsIntoTrainAndVal(int[] encodedWords, double trainRatio, out int[] trainWords, out int[] valWords)
+        {
+            int splitIndex = (int)(encodedWords.Length * trainRatio);
+            trainWords = encodedWords.Take(splitIndex).ToArray();
+            valWords = encodedWords.Skip(splitIndex).ToArray();
         }
 
         private int[] AdjustTokensToChunkSize(int[] tokens, int chunkSize, int numTokens)
@@ -90,6 +90,17 @@ namespace BytePairEncoding
             else
             {
                 return tokens;
+            }
+        }
+
+        private void WriteIdsToBinFile(string fileName, int[] ids)
+        {
+            using (BinaryWriter writer = new BinaryWriter(File.OpenWrite(fileName)))
+            {
+                foreach (int id in ids)
+                {
+                    writer.Write(id);
+                }
             }
         }
     }

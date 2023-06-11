@@ -69,11 +69,12 @@ namespace BytePairEncoding
         {
             vocabSizeTextBlock.Text = "Tokenising and saving training and validation data to bins";
             string fileName = "input.txt";
-            int[] valIds = tokenizeandbin.TokeniseAndCreateBins(fileName, 0.9);
+            int[] valIds = tokenizeandbin.ProcessFile(fileName, 0.9);
             string valBinContent = string.Join(" ", valIds);
             valBinTextBlock.Text = valBinContent;
             vocabSizeTextBlock.Text = "Tokenisation and bin saving complete";
         }
+
 
         private void sampleButton_Click(object sender, RoutedEventArgs e)
         {

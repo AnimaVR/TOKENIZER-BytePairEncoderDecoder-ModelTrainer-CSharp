@@ -85,44 +85,41 @@ namespace BytePairEncoding
 
         public string Decode(int[] ids)
         {
+            List<string> tokens = ConvertIdsToTokens(ids);
+            tokens = ExpandTokens(tokens);
+            tokens.RemoveAll(token => token == "<PAD>");
+            return string.Join("", tokens);
+        }
+
+        private List<string> ConvertIdsToTokens(int[] ids)
+        {
             List<string> tokens = new List<string>();
 
             foreach (int id in ids)
             {
-                bool foundToken = false;
-                foreach (var kv in token2id)
-                {
-                    if (kv.Value == id)
-                    {
-                        tokens.Add(kv.Key);
-                        foundToken = true;
-                        break;
-                    }
-                }
-
-                if (!foundToken)
-                {
-                    tokens.Add("<UNK>");
-                }
+                var tokenKV = token2id.FirstOrDefault(kv => kv.Value == id);
+                tokens.Add(tokenKV.Key ?? "<UNK>");
             }
 
+            return tokens;
+        }
+
+        private List<string> ExpandTokens(List<string> tokens)
+        {
             int i = 0;
             while (i < tokens.Count)
             {
                 if (tokens[i] == "<SPACE>")
                 {
                     tokens[i] = " ";
-                    i++;
                 }
                 else if (tokens[i] == "<UNK>")
                 {
                     tokens[i] = "";  // Replace "<UNK>" with newline character
-                    i++;
                 }
                 else if (tokens[i] == "<NEWLINE>")
                 {
                     tokens[i] = "\n";  // Replace "<NEWLINE>" with newline character
-                    i++;
                 }
                 else
                 {
@@ -147,9 +144,7 @@ namespace BytePairEncoding
                 }
             }
 
-            tokens.RemoveAll(token => token == "<PAD>");
-            return string.Join("", tokens);
+            return tokens;
         }
-
     }
 }
