@@ -77,13 +77,14 @@ namespace BytePairEncoding
                     if (substring == key)
                     {
                         bestLength = key.Length;
-                        bestToken = pair.Value.ToString();
+                        bestToken = pair.Value?.ToString() ?? "";
                     }
                 }
             }
 
             return (bestToken, bestLength);
         }
+
 
         private void HandleSpecialTokens(ref string token)
         {

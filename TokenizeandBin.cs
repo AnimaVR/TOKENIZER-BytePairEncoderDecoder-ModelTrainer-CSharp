@@ -28,16 +28,17 @@ namespace BytePairEncoding
             this.encoder = new Encoder(bpe);
         }
 
-        public async Task<int[]> ProcessFileAsync(string fileName, double trainRatio = 0.9, IProgress<int> progress = null)
+        public async Task<int[]> ProcessFileAsync(string fileName, double trainRatio = 0.9, IProgress<int>? progress = null)
         {
             string text = await File.ReadAllTextAsync(fileName);
             int[] encodedWords = await encoder.EncodeAsync(text);
             SplitWordsIntoTrainAndVal(encodedWords, trainRatio, out var trainWords, out var valWords);
-            await AdjustWordsToChunkSizeAndWriteToFileAsync("train.bin", trainWords, progress);
-            await AdjustWordsToChunkSizeAndWriteToFileAsync("val.bin", valWords, progress);
+            await AdjustWordsToChunkSizeAndWriteToFileAsync("train.bin", trainWords, progress!);
+            await AdjustWordsToChunkSizeAndWriteToFileAsync("val.bin", valWords, progress!);
 
             return valWords;
         }
+
 
         private void SplitWordsIntoTrainAndVal(int[] encodedWords, double trainRatio, out int[] trainWords, out int[] valWords)
         {
@@ -67,6 +68,7 @@ namespace BytePairEncoding
 
             progress?.Report(100);
         }
+
 
         private int[] AdjustTokensToChunkSize(int[] tokens, int chunkSize, int numTokens)
         {

@@ -23,6 +23,7 @@ namespace BytePairEncoding
             this.vocab = bpe.vocab;
             this.mergePairs = bpe.mergePairs;
             this.tokenCount = bpe.tokenCount;
+
         }
 
         public async Task TrainAsync(string fileName, int numMerges, int minFrequency, IProgress<int> progress)

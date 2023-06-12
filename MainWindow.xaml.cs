@@ -11,7 +11,8 @@ namespace BytePairEncoding
         Encoder encoder;
         Decoder decoder;
         TokenizeandBin tokenizeandbin;
-        private int[] encodedIds;
+        private int[] encodedIds = Array.Empty<int>();
+
         Train train;
         public MainWindow()
         {
