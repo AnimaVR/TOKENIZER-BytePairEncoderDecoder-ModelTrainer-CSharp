@@ -7,11 +7,11 @@ namespace BytePairEncoding
 {
     public partial class MainWindow : Window
     {
-        private int[] encodedIds;
+        BPE bpe;
         Encoder encoder;
         Decoder decoder;
-        BPE bpe;
         TokenizeandBin tokenizeandbin;
+        private int[] encodedIds;
         Train train;
         public MainWindow()
         {
@@ -22,7 +22,6 @@ namespace BytePairEncoding
             tokenizeandbin = new TokenizeandBin(bpe);
             train = new Train(bpe);
         }
-
 
         private void LoadModelButton_Click(object sender, RoutedEventArgs e)
         {
@@ -40,19 +39,16 @@ namespace BytePairEncoding
 
         private async void startTrainingButton_Click(object sender, RoutedEventArgs e)
         {
+            startButton.IsEnabled = false;
             vocabSizeTextBlock.Text = "Training the model, please wait";
-
-            // Create a progress object and subscribe to the ProgressChanged event
             var progress = new Progress<int>(value =>
             {
                progressBar.Value = value;
             });
-
-            await train.TrainAsync("input.txt", 20, 0, progress);
-
+            await train.TrainAsync("input.txt", 2, 0, progress);
             vocabSizeTextBlock.Text = "Training complete, vocabulary size of model = " + bpe.GetVocabSize().ToString() + "+1 for the end of line spaces";
+            startButton.IsEnabled = true;
         }
-
 
         private async void encodeButton_Click(object sender, RoutedEventArgs e)
         {
@@ -61,7 +57,6 @@ namespace BytePairEncoding
             string encodedText = string.Join(" ", encodedIds);
             encodedTextBlock.Text = encodedText;
         }
-
 
         private void decodeButton_Click(object sender, RoutedEventArgs e)
         {
@@ -78,40 +73,29 @@ namespace BytePairEncoding
 
         private async void TokenizeData_Click(object sender, RoutedEventArgs e)
         {
+            CreateTrainValBins.IsEnabled = false;
             vocabSizeTextBlock.Text = "Tokenising and saving training and validation data to bins";
             string fileName = "input.txt";
-
             Progress<int> progress = new Progress<int>(percentage =>
             {
                 progressBar.Value = percentage;
             });
-
             int[] valIds = await tokenizeandbin.ProcessFileAsync(fileName, 0.9, progress);
             string valBinContent = string.Join(" ", valIds);
             valBinTextBlock.Text = valBinContent;
             vocabSizeTextBlock.Text = "Tokenisation and bin saving complete";
+            CreateTrainValBins.IsEnabled = true;
         }
-
-
 
         private void sampleButton_Click(object sender, RoutedEventArgs e)
         {
-            // Read the train.bin file
             byte[] trainBytes = File.ReadAllBytes("val.bin");
-
-            // Convert the byte array back to an array of integers
             int[] trainIds = new int[trainBytes.Length / sizeof(int)];
             Buffer.BlockCopy(trainBytes, 0, trainIds, 0, trainBytes.Length);
-
-            // Define the block size
             int blockSize = 4096;
-            
             int[] blockOfIds = trainIds.Take(blockSize).ToArray();
-
             string decodedText = decoder.Decode(blockOfIds);
-
             valBinTextBlock.Text = decodedText;
-           
         }
 
     }

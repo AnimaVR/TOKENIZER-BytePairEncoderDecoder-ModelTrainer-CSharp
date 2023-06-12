@@ -24,6 +24,7 @@ namespace BytePairEncoding
             this.mergePairs = bpe.mergePairs;
             this.tokenCount = bpe.tokenCount;
         }
+
         public async Task TrainAsync(string fileName, int numMerges, int minFrequency, IProgress<int> progress)
         {
             vocab.Clear();
@@ -64,7 +65,6 @@ namespace BytePairEncoding
 
                 MergeMostFrequentPair(pairCounts, mostFreqPair, words);
 
-                // Update progress
                 int mergeProgress = (i + 1) * 100 / numMerges;
                 progress.Report(mergeProgress);
             }
