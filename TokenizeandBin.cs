@@ -39,7 +39,6 @@ namespace BytePairEncoding
             return valWords;
         }
 
-
         private void SplitWordsIntoTrainAndVal(int[] encodedWords, double trainRatio, out int[] trainWords, out int[] valWords)
         {
             int splitIndex = (int)(encodedWords.Length * trainRatio);
@@ -68,7 +67,6 @@ namespace BytePairEncoding
 
             progress?.Report(100);
         }
-
 
         private int[] AdjustTokensToChunkSize(int[] tokens, int chunkSize, int numTokens)
         {

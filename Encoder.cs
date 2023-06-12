@@ -55,7 +55,7 @@ namespace BytePairEncoding
             {
                 var (bestToken, bestLength) = FindBestToken(wordJoined, i);
                 HandleSpecialTokens(ref bestToken);
-                UpdateTokenToIdIfNeeded(bestToken);
+                ReplaceUnknownToken(bestToken);
                 encodedTokens.Add(token2id.Single(kv => kv.Key == bestToken).Value);
                 i += bestLength - 1;
             }
@@ -85,7 +85,6 @@ namespace BytePairEncoding
             return (bestToken, bestLength);
         }
 
-
         private void HandleSpecialTokens(ref string token)
         {
             if (token == "\n")
@@ -94,12 +93,11 @@ namespace BytePairEncoding
             }
         }
 
-        private void UpdateTokenToIdIfNeeded(string token)
+        private void ReplaceUnknownToken(string token)
         {
             if (!token2id.Any(kv => kv.Key == token))
             {
-                token2id.Add(new KeyValuePair<string, int>(token, tokenCount));
-                tokenCount++;
+                token2id.Add(new KeyValuePair<string, int>(token, token2id.Single(kv => kv.Key == "<UNK>").Value));
             }
         }
 

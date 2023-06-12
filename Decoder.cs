@@ -16,6 +16,7 @@ namespace BytePairEncoding
         public OrderedDictionary vocab;
         public OrderedDictionary mergePairs;
         public int tokenCount;
+
         public Decoder(BPE bpe)
         {
             this.bpe = bpe;

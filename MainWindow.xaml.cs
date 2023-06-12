@@ -12,8 +12,8 @@ namespace BytePairEncoding
         Decoder decoder;
         TokenizeandBin tokenizeandbin;
         private int[] encodedIds = Array.Empty<int>();
-
         Train train;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -22,6 +22,20 @@ namespace BytePairEncoding
             decoder = new Decoder(bpe);
             tokenizeandbin = new TokenizeandBin(bpe);
             train = new Train(bpe);
+        }
+
+
+        private async void startTrainingButton_Click(object sender, RoutedEventArgs e)
+        {
+            startButton.IsEnabled = false;
+            vocabSizeTextBlock.Text = "Training the model, please wait";
+            var progress = new Progress<int>(value =>
+            {
+               progressBar.Value = value;
+            });
+            await train.TrainAsync("input.txt", 2, 0, progress);
+            vocabSizeTextBlock.Text = "Training complete, vocabulary size of model = " + bpe.GetVocabSize().ToString() + "+1 for the end of line spaces";
+            startButton.IsEnabled = true;
         }
 
         private void LoadModelButton_Click(object sender, RoutedEventArgs e)
@@ -38,39 +52,7 @@ namespace BytePairEncoding
             }
         }
 
-        private async void startTrainingButton_Click(object sender, RoutedEventArgs e)
-        {
-            startButton.IsEnabled = false;
-            vocabSizeTextBlock.Text = "Training the model, please wait";
-            var progress = new Progress<int>(value =>
-            {
-               progressBar.Value = value;
-            });
-            await train.TrainAsync("input.txt", 2, 0, progress);
-            vocabSizeTextBlock.Text = "Training complete, vocabulary size of model = " + bpe.GetVocabSize().ToString() + "+1 for the end of line spaces";
-            startButton.IsEnabled = true;
-        }
 
-        private async void encodeButton_Click(object sender, RoutedEventArgs e)
-        {
-            string inputText = inputTextBox.Text;
-            encodedIds = await encoder.EncodeAsync(inputText);
-            string encodedText = string.Join(" ", encodedIds);
-            encodedTextBlock.Text = encodedText;
-        }
-
-        private void decodeButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (encodedIds != null)
-            {
-                string decodedText = decoder.Decode(encodedIds);
-                decodedTextBlock.Text = decodedText;
-            }
-            else
-            {
-                decodedTextBlock.Text = "No encoded text to decode.";
-            }
-        }
 
         private async void TokenizeData_Click(object sender, RoutedEventArgs e)
         {
@@ -97,6 +79,29 @@ namespace BytePairEncoding
             int[] blockOfIds = trainIds.Take(blockSize).ToArray();
             string decodedText = decoder.Decode(blockOfIds);
             valBinTextBlock.Text = decodedText;
+        }
+
+
+
+        private async void encodeButton_Click(object sender, RoutedEventArgs e)
+        {
+            string inputText = inputTextBox.Text;
+            encodedIds = await encoder.EncodeAsync(inputText);
+            string encodedText = string.Join(" ", encodedIds);
+            encodedTextBlock.Text = encodedText;
+        }
+
+        private void decodeButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (encodedIds != null)
+            {
+                string decodedText = decoder.Decode(encodedIds);
+                decodedTextBlock.Text = decodedText;
+            }
+            else
+            {
+                decodedTextBlock.Text = "No encoded text to decode.";
+            }
         }
 
     }
