@@ -24,7 +24,6 @@ namespace BytePairEncoding
             this.mergePairs = bpe.mergePairs;
             this.tokenCount = bpe.tokenCount;
         }
-
       
         public string Decode(int[] ids)
         {

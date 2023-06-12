@@ -16,6 +16,7 @@ namespace BytePairEncoding
         public OrderedDictionary vocab;
         public OrderedDictionary mergePairs;
         public int tokenCount;
+
         public Encoder(BPE bpe)
         {
             this.bpe = bpe;
@@ -42,14 +43,17 @@ namespace BytePairEncoding
 
             return encodedTokens.ToArray();
         }
+
         private List<int> ProcessWord(string word)
         {
             List<string> wordList = word.Select(ch => ch.ToString()).ToList();
             List<int> encodedTokens = new List<int>();
 
+            string wordJoined = string.Join("", wordList);
+
             for (int i = 0; i < wordList.Count; i++)
             {
-                var (bestToken, bestLength) = FindBestToken(wordList, i);
+                var (bestToken, bestLength) = FindBestToken(wordJoined, i);
                 HandleSpecialTokens(ref bestToken);
                 UpdateTokenToIdIfNeeded(bestToken);
                 encodedTokens.Add(token2id.Single(kv => kv.Key == bestToken).Value);
@@ -59,17 +63,17 @@ namespace BytePairEncoding
             return encodedTokens;
         }
 
-        private (string, int) FindBestToken(List<string> wordList, int startIdx)
+        private (string, int) FindBestToken(string wordJoined, int startIdx)
         {
-            string bestToken = wordList[startIdx];
+            string bestToken = wordJoined[startIdx].ToString();
             int bestLength = 1;
 
             foreach (DictionaryEntry pair in mergePairs)
             {
                 string key = pair.Key.ToString();
-                if (key.Length > bestLength && startIdx + key.Length <= wordList.Count)
+                if (key.Length > bestLength && startIdx + key.Length <= wordJoined.Length)
                 {
-                    string substring = string.Join("", wordList.GetRange(startIdx, key.Length));
+                    string substring = wordJoined.Substring(startIdx, key.Length);
                     if (substring == key)
                     {
                         bestLength = key.Length;
@@ -113,7 +117,5 @@ namespace BytePairEncoding
                 encodedTokens.RemoveAt(encodedTokens.Count - 1);
             }
         }
-
-       
     }
 }
