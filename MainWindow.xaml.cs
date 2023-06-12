@@ -29,11 +29,11 @@ namespace BytePairEncoding
             if (File.Exists(modelPath))
             {
                 bpe.LoadModel(modelPath);
-                MessageBox.Show("Model loaded successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                vocabSizeTextBlock.Text = "Model Loaded";
             }
             else
             {
-                MessageBox.Show("No model found. You need to train one first.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                vocabSizeTextBlock.Text = "Model not found, please train one on your data";
             }
         }
 

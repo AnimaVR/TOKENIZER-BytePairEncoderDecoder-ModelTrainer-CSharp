@@ -141,6 +141,7 @@ namespace BytePairEncoding
             }
 
         }
+
         private async Task<(List<KeyValuePair<string, int>>, KeyValuePair<string, int>?)> CountPairAsync(List<List<string>> words)
         {
             var pairCounts = new List<KeyValuePair<string, int>>();
@@ -217,6 +218,7 @@ namespace BytePairEncoding
 
             return (pairCounts, mostFreqPair);
         }
+
         private void MergeMostFrequentPair(List<KeyValuePair<string, int>> pairCounts, KeyValuePair<string, int>? mostFreqPair, List<List<string>> words)
         {
             if (mostFreqPair == null)

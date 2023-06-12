@@ -44,7 +44,6 @@ namespace BytePairEncoding
             return encodedTokens.ToArray();
         }
 
-
         private List<int> ProcessWord(string word)
         {
             List<string> wordList = word.Select(ch => ch.ToString()).ToList();
