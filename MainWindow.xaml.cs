@@ -8,7 +8,8 @@ namespace BytePairEncoding
     public partial class MainWindow : Window
     {
         private int[] encodedIds;
-        EncodeDecode encodedecode;
+        Encoder encodedecode;
+        Decoder decoder;
         BPE bpe;
         TokenizeandBin tokenizeandbin;
         Train train;
@@ -16,7 +17,8 @@ namespace BytePairEncoding
         {
             InitializeComponent();
             bpe = new BPE();
-            encodedecode = new EncodeDecode(bpe);
+            encodedecode = new Encoder(bpe);
+            decoder = new Decoder(bpe);
             tokenizeandbin = new TokenizeandBin(bpe);
             train = new Train(bpe);
         }
@@ -39,7 +41,7 @@ namespace BytePairEncoding
         private async void startTrainingButton_Click(object sender, RoutedEventArgs e)
         {
             vocabSizeTextBlock.Text = "Training the model, please wait";
-            await train.TrainAsync("input.txt", 5, 0);
+            await train.TrainAsync("input.txt", 2, 0);
             vocabSizeTextBlock.Text = "Training complete, vocabulary size of model = " + bpe.GetVocabSize().ToString() + "+1 for the end of line spaces";
            
         }
@@ -56,7 +58,7 @@ namespace BytePairEncoding
         {
             if (encodedIds != null)
             {
-                string decodedText = encodedecode.Decode(encodedIds);
+                string decodedText = decoder.Decode(encodedIds);
                 decodedTextBlock.Text = decodedText;
             }
             else
@@ -75,7 +77,6 @@ namespace BytePairEncoding
             vocabSizeTextBlock.Text = "Tokenisation and bin saving complete";
         }
 
-
         private void sampleButton_Click(object sender, RoutedEventArgs e)
         {
             // Read the train.bin file
@@ -90,7 +91,7 @@ namespace BytePairEncoding
             
             int[] blockOfIds = trainIds.Take(blockSize).ToArray();
 
-            string decodedText = encodedecode.Decode(blockOfIds);
+            string decodedText = decoder.Decode(blockOfIds);
 
             valBinTextBlock.Text = decodedText;
            

@@ -12,7 +12,7 @@ namespace BytePairEncoding
     public class TokenizeandBin
     {
         public BPE bpe;
-        public EncodeDecode encodeDecode;
+        public Encoder encoder;
         public List<KeyValuePair<string, int>> token2id;
         public OrderedDictionary vocab;
         public OrderedDictionary mergePairs;
@@ -25,23 +25,25 @@ namespace BytePairEncoding
             this.vocab = bpe.vocab;
             this.mergePairs = bpe.mergePairs;
             this.tokenCount = bpe.tokenCount;
-            this.encodeDecode = new EncodeDecode(bpe);
-        }
-
-        private string ReadTextFromFile(string fileName)
-        {
-            return File.ReadAllText(fileName);
-        }
+            this.encoder = new Encoder(bpe);
+        }  
       
         public int[] ProcessFile(string fileName, double trainRatio = 0.9)
         {
-            string text = ReadTextFromFile(fileName);
-            int[] encodedWords = EncodeWords(text);
+            string text = File.ReadAllText(fileName);
+            int[] encodedWords = encoder.Encode(text);
             SplitWordsIntoTrainAndVal(encodedWords, trainRatio, out var trainWords, out var valWords);
             AdjustWordsToChunkSizeAndWriteToFile("train.bin", trainWords);
             int[] valIds = AdjustWordsToChunkSizeAndWriteToFile("val.bin", valWords);
           
             return valIds;
+        }
+
+        private void SplitWordsIntoTrainAndVal(int[] encodedWords, double trainRatio, out int[] trainWords, out int[] valWords)
+        {
+            int splitIndex = (int)(encodedWords.Length * trainRatio);
+            trainWords = encodedWords.Take(splitIndex).ToArray();
+            valWords = encodedWords.Skip(splitIndex).ToArray();
         }
 
         private int[] AdjustWordsToChunkSizeAndWriteToFile(string fileName, int[] words)
@@ -52,18 +54,6 @@ namespace BytePairEncoding
             WriteIdsToBinFile(fileName, adjustedWords);
 
             return adjustedWords; 
-        }
-
-        private int[] EncodeWords(string text)
-        {
-            return encodeDecode.Encode(text);
-        }
-
-        private void SplitWordsIntoTrainAndVal(int[] encodedWords, double trainRatio, out int[] trainWords, out int[] valWords)
-        {
-            int splitIndex = (int)(encodedWords.Length * trainRatio);
-            trainWords = encodedWords.Take(splitIndex).ToArray();
-            valWords = encodedWords.Skip(splitIndex).ToArray();
         }
 
         private int[] AdjustTokensToChunkSize(int[] tokens, int chunkSize, int numTokens)
@@ -85,7 +75,6 @@ namespace BytePairEncoding
 
             return adjustedTokens;
         }
-
 
         private void WriteIdsToBinFile(string fileName, int[] ids)
         {

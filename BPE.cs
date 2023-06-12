@@ -45,6 +45,7 @@ namespace BytePairEncoding
                 }
             }
         }
+
         public void LoadModel(string filePath)
         {
             vocab.Clear();

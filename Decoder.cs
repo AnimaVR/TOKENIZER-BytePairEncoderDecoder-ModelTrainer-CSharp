@@ -9,14 +9,14 @@ using System.Threading.Tasks;
 
 namespace BytePairEncoding
 {
-    public class EncodeDecode
+    public class Decoder
     {
         public BPE bpe;
         public List<KeyValuePair<string, int>> token2id;
         public OrderedDictionary vocab;
         public OrderedDictionary mergePairs;
         public int tokenCount;
-        public EncodeDecode(BPE bpe)
+        public Decoder(BPE bpe)
         {
             this.bpe = bpe;
             this.token2id = bpe.token2id;
@@ -25,64 +25,7 @@ namespace BytePairEncoding
             this.tokenCount = bpe.tokenCount;
         }
 
-        public int[] Encode(string text)
-        {
-            string[] words = text.Split(' ');
-
-            List<int> encodedTokens = new List<int>();
-
-            foreach (var word in words)
-            {
-                List<string> wordList = word.Select(ch => ch.ToString()).ToList();
-
-                for (int i = 0; i < wordList.Count; i++)
-                {
-                    string bestToken = wordList[i];
-                    int bestLength = 1;
-
-                    foreach (DictionaryEntry pair in mergePairs)
-                    {
-                        string key = pair.Key.ToString();
-                        if (key.Length > bestLength && i + key.Length <= wordList.Count)
-                        {
-                            string substring = string.Join("", wordList.GetRange(i, key.Length));
-                            if (substring == key)
-                            {
-                                bestLength = key.Length;
-                                bestToken = pair.Value.ToString();
-                            }
-                        }
-                    }
-
-                    if (bestToken == "\n")
-                    {
-                        bestToken = "<NEWLINE>";
-                    }
-
-                    if (!token2id.Any(kv => kv.Key == bestToken))
-                    {
-                        token2id.Add(new KeyValuePair<string, int>(bestToken, tokenCount));
-                        tokenCount++;
-                    }
-
-                    encodedTokens.Add(token2id.Single(kv => kv.Key == bestToken).Value);
-                    i += bestLength - 1;
-                }
-
-                if (token2id.Any(kv => kv.Key == "<SPACE>"))
-                {
-                    encodedTokens.Add(token2id.Single(kv => kv.Key == "<SPACE>").Value);
-                }
-            }
-
-            if (encodedTokens.Count > 0 && token2id.Any(kv => kv.Key == "<SPACE>") && encodedTokens[^1] == token2id.Single(kv => kv.Key == "<SPACE>").Value)
-            {
-                encodedTokens.RemoveAt(encodedTokens.Count - 1);
-            }
-
-            return encodedTokens.ToArray();
-        }
-
+      
         public string Decode(int[] ids)
         {
             List<string> tokens = ConvertIdsToTokens(ids);
@@ -115,11 +58,11 @@ namespace BytePairEncoding
                 }
                 else if (tokens[i] == "<UNK>")
                 {
-                    tokens[i] = "";  // Replace "<UNK>" with newline character
+                    tokens[i] = "";  
                 }
                 else if (tokens[i] == "<NEWLINE>")
                 {
-                    tokens[i] = "\n";  // Replace "<NEWLINE>" with newline character
+                    tokens[i] = "\n";  
                 }
                 else
                 {
