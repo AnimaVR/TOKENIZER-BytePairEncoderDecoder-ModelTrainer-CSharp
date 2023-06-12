@@ -26,18 +26,20 @@ namespace BytePairEncoding
             this.mergePairs = bpe.mergePairs;
             this.tokenCount = bpe.tokenCount;
             this.encoder = new Encoder(bpe);
-        }  
-      
-        public int[] ProcessFile(string fileName, double trainRatio = 0.9)
-        {
-            string text = File.ReadAllText(fileName);
-            int[] encodedWords = encoder.Encode(text);
-            SplitWordsIntoTrainAndVal(encodedWords, trainRatio, out var trainWords, out var valWords);
-            AdjustWordsToChunkSizeAndWriteToFile("train.bin", trainWords);
-            int[] valIds = AdjustWordsToChunkSizeAndWriteToFile("val.bin", valWords);
-          
-            return valIds;
         }
+
+        public async Task<int[]> ProcessFileAsync(string fileName, double trainRatio = 0.9, IProgress<int> progress = null)
+        {
+            string text = await File.ReadAllTextAsync(fileName);
+            int[] encodedWords = await encoder.EncodeAsync(text);
+            SplitWordsIntoTrainAndVal(encodedWords, trainRatio, out var trainWords, out var valWords);
+            await AdjustWordsToChunkSizeAndWriteToFileAsync("train.bin", trainWords, progress);
+            await AdjustWordsToChunkSizeAndWriteToFileAsync("val.bin", valWords, progress);
+
+            return valWords;
+        }
+
+
 
         private void SplitWordsIntoTrainAndVal(int[] encodedWords, double trainRatio, out int[] trainWords, out int[] valWords)
         {
@@ -46,15 +48,32 @@ namespace BytePairEncoding
             valWords = encodedWords.Skip(splitIndex).ToArray();
         }
 
-        private int[] AdjustWordsToChunkSizeAndWriteToFile(string fileName, int[] words)
+
+
+        private async Task AdjustWordsToChunkSizeAndWriteToFileAsync(string fileName, int[] words, IProgress<int> progress)
         {
             int chunkSize = 2048;
             int numTokens = (int)Math.Ceiling(words.Length / (double)chunkSize) * chunkSize;
             int[] adjustedWords = AdjustTokensToChunkSize(words, chunkSize, numTokens);
-            WriteIdsToBinFile(fileName, adjustedWords);
 
-            return adjustedWords; 
+            int progressPercentage = 0;
+            for (int i = 0; i < adjustedWords.Length; i += chunkSize)
+            {
+                int[] chunk = adjustedWords.Skip(i).Take(chunkSize).ToArray();
+                WriteIdsToBinFile(fileName, chunk);
+
+                progressPercentage = (int)((i + chunkSize) / (double)adjustedWords.Length * 100);
+                progress?.Report(progressPercentage);
+
+                // Introduce a delay to simulate gradual progress
+                await Task.Delay(1); // Adjust the delay duration as needed
+            }
+
+            progress?.Report(100);
         }
+
+
+
 
         private int[] AdjustTokensToChunkSize(int[] tokens, int chunkSize, int numTokens)
         {
@@ -86,5 +105,7 @@ namespace BytePairEncoding
                 }
             }
         }
+
+
     }
 }

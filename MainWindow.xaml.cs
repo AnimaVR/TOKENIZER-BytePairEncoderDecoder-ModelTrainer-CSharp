@@ -8,7 +8,7 @@ namespace BytePairEncoding
     public partial class MainWindow : Window
     {
         private int[] encodedIds;
-        Encoder encodedecode;
+        Encoder encoder;
         Decoder decoder;
         BPE bpe;
         TokenizeandBin tokenizeandbin;
@@ -17,7 +17,7 @@ namespace BytePairEncoding
         {
             InitializeComponent();
             bpe = new BPE();
-            encodedecode = new Encoder(bpe);
+            encoder = new Encoder(bpe);
             decoder = new Decoder(bpe);
             tokenizeandbin = new TokenizeandBin(bpe);
             train = new Train(bpe);
@@ -41,18 +41,27 @@ namespace BytePairEncoding
         private async void startTrainingButton_Click(object sender, RoutedEventArgs e)
         {
             vocabSizeTextBlock.Text = "Training the model, please wait";
-            await train.TrainAsync("input.txt", 2, 0);
+
+            // Create a progress object and subscribe to the ProgressChanged event
+            var progress = new Progress<int>(value =>
+            {
+               progressBar.Value = value;
+            });
+
+            await train.TrainAsync("input.txt", 20, 0, progress);
+
             vocabSizeTextBlock.Text = "Training complete, vocabulary size of model = " + bpe.GetVocabSize().ToString() + "+1 for the end of line spaces";
-           
         }
 
-        private void encodeButton_Click(object sender, RoutedEventArgs e)
+
+        private async void encodeButton_Click(object sender, RoutedEventArgs e)
         {
             string inputText = inputTextBox.Text;
-            encodedIds = encodedecode.Encode(inputText);
+            encodedIds = await encoder.EncodeAsync(inputText);
             string encodedText = string.Join(" ", encodedIds);
             encodedTextBlock.Text = encodedText;
         }
+
 
         private void decodeButton_Click(object sender, RoutedEventArgs e)
         {
@@ -67,15 +76,23 @@ namespace BytePairEncoding
             }
         }
 
-        private void TokenizeData_Click(object sender, RoutedEventArgs e)
+        private async void TokenizeData_Click(object sender, RoutedEventArgs e)
         {
             vocabSizeTextBlock.Text = "Tokenising and saving training and validation data to bins";
             string fileName = "input.txt";
-            int[] valIds = tokenizeandbin.ProcessFile(fileName, 0.9);
+
+            Progress<int> progress = new Progress<int>(percentage =>
+            {
+                progressBar.Value = percentage;
+            });
+
+            int[] valIds = await tokenizeandbin.ProcessFileAsync(fileName, 0.9, progress);
             string valBinContent = string.Join(" ", valIds);
             valBinTextBlock.Text = valBinContent;
             vocabSizeTextBlock.Text = "Tokenisation and bin saving complete";
         }
+
+
 
         private void sampleButton_Click(object sender, RoutedEventArgs e)
         {

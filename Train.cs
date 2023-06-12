@@ -24,7 +24,7 @@ namespace BytePairEncoding
             this.mergePairs = bpe.mergePairs;
             this.tokenCount = bpe.tokenCount;
         }
-        public async Task TrainAsync(string fileName, int numMerges, int minFrequency)
+        public async Task TrainAsync(string fileName, int numMerges, int minFrequency, IProgress<int> progress)
         {
             vocab.Clear();
             mergePairs.Clear();
@@ -32,7 +32,6 @@ namespace BytePairEncoding
             string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
             string text = await File.ReadAllTextAsync(filePath);
 
-            // Handle spaces at the end of lines here
             string[] lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
             var words = new List<List<string>>();
             foreach (var line in lines)
@@ -64,6 +63,10 @@ namespace BytePairEncoding
                 }
 
                 MergeMostFrequentPair(pairCounts, mostFreqPair, words);
+
+                // Update progress
+                int mergeProgress = (i + 1) * 100 / numMerges;
+                progress.Report(mergeProgress);
             }
 
             foreach (string token in vocab.Keys)
@@ -75,12 +78,11 @@ namespace BytePairEncoding
                 }
             }
 
-
             bpe.SaveModel("model.txt");
 
-            bpe.LoadModel("model.txt");  // this is a workaround to allow the model to be consistent between closing after training it into memory.
-                                     // memory is saved slightly differently into file randomly so when we load it it's different and we need to tokenize again.... annoyingly!!!
+            bpe.LoadModel("model.txt");
         }
+
         private async Task LoadVocabAsync(List<List<string>> words, int minFrequency)
         {
             object lockObject = new object();

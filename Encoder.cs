@@ -26,7 +26,7 @@ namespace BytePairEncoding
             this.tokenCount = bpe.tokenCount;
         }
 
-        public int[] Encode(string text)
+        public async Task<int[]> EncodeAsync(string text)
         {
             string[] words = text.Split(' ');
 
@@ -34,7 +34,7 @@ namespace BytePairEncoding
 
             foreach (var word in words)
             {
-                List<int> wordTokens = ProcessWord(word);
+                List<int> wordTokens = await Task.Run(() => ProcessWord(word));
                 encodedTokens.AddRange(wordTokens);
                 AddSpaceToken(encodedTokens);
             }
@@ -43,6 +43,7 @@ namespace BytePairEncoding
 
             return encodedTokens.ToArray();
         }
+
 
         private List<int> ProcessWord(string word)
         {

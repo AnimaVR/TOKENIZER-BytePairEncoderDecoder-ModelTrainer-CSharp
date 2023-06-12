@@ -7,6 +7,8 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
+        <ProgressBar x:Name="progressBar" Minimum="0" Maximum="100" Value="0" Height="7" VerticalAlignment="Top" />
+
         <Button x:Name="startButton" Content="Start Training" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="200" Click="startTrainingButton_Click"/>
         <TextBlock x:Name="vocabSizeTextBlock" Margin="10,0,421,95" TextWrapping="Wrap" Text="" Height="35" VerticalAlignment="Bottom"/>
         <Button x:Name="decodeButton" Content="Decode" HorizontalAlignment="Left" Margin="10,0,0,45" Width="111" Click="decodeButton_Click" Height="33" VerticalAlignment="Bottom"/>
@@ -16,7 +18,7 @@
         <TextBlock x:Name="encodedTextBlock" Margin="126,0,0,45" TextWrapping="Wrap" Text="" Height="33" VerticalAlignment="Bottom" Foreground="White" Background="Black" HorizontalAlignment="Left" Width="340" Padding="10,10,10,10"/>
         <TextBlock x:Name="valBinTextBlock" Margin="471,37,10,89" TextWrapping="Wrap" Text="" Background="Black" Foreground="White" Padding="10,10,10,10"/>
         <Button x:Name="LoadModelButton" Content="Load Model" HorizontalAlignment="Left" Margin="215,10,0,0" VerticalAlignment="Top" Width="100" Click="LoadModelButton_Click"/>
-        <Button x:Name="CreateTrainValBins" Content="TokenizeNMakeBins" Margin="0,7,130,0" VerticalAlignment="Top" Click="TokenizeData_Click" HorizontalAlignment="Right" Width="199" Height="24"/>
-        <Button x:Name="sampleButton" Content="Sample Bin" Click="sampleButton_Click" Margin="0,7,10,0" Height="25" VerticalAlignment="Top" HorizontalAlignment="Right" Width="115" />
+        <Button x:Name="CreateTrainValBins" Content="TokenizeNMakeBins" Margin="0,12,130,0" VerticalAlignment="Top" Click="TokenizeData_Click" HorizontalAlignment="Right" Width="199" Height="19"/>
+        <Button x:Name="sampleButton" Content="Sample Bin" Click="sampleButton_Click" Margin="0,12,10,0" Height="20" VerticalAlignment="Top" HorizontalAlignment="Right" Width="115" />
     </Grid>
 </Window>
