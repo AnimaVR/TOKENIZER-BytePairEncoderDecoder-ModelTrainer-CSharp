@@ -1,34 +1,21 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BytePairEncoding
 {
     public class Decoder
     {
-        public BPE bpe;
-        public List<KeyValuePair<string, int>> token2id;
-        public OrderedDictionary vocab;
-        public OrderedDictionary mergePairs;
-        public int tokenCount;
+        private readonly BPE _bpe;
 
         public Decoder(BPE bpe)
         {
-            this.bpe = bpe;
-            this.token2id = bpe.token2id;
-            this.vocab = bpe.vocab;
-            this.mergePairs = bpe.mergePairs;
-            this.tokenCount = bpe.tokenCount;
+            _bpe = bpe;
         }
-      
+
         public string Decode(int[] ids)
         {
-            List<string> tokens = ConvertIdsToTokens(ids);
+            var tokens = ConvertIdsToTokens(ids);
             tokens = ExpandTokens(tokens);
             tokens.RemoveAll(token => token == "<PAD>");
             return string.Join("", tokens);
@@ -36,58 +23,52 @@ namespace BytePairEncoding
 
         private List<string> ConvertIdsToTokens(int[] ids)
         {
-            List<string> tokens = new List<string>();
+            return ids.Select(id => _bpe.token2id.FirstOrDefault(kv => kv.Value == id).Key ?? "<UNK>").ToList();
+        }
 
-            foreach (int id in ids)
+        private List<string> ExpandTokens(List<string> tokens)
+        {
+            for (int i = 0; i < tokens.Count;)
             {
-                var tokenKV = token2id.FirstOrDefault(kv => kv.Value == id);
-                tokens.Add(tokenKV.Key ?? "<UNK>");
+                switch (tokens[i])
+                {
+                    case "<SPACE>":
+                        tokens[i] = " ";
+                        i++;
+                        break;
+                    case "<UNK>":
+                        tokens[i] = "";
+                        i++;
+                        break;
+                    case "<NEWLINE>":
+                        tokens[i] = "\n";
+                        i++;
+                        break;
+                    default:
+                        i = TryExpandToken(tokens, i);
+                        break;
+                }
             }
 
             return tokens;
         }
 
-        private List<string> ExpandTokens(List<string> tokens)
+        private int TryExpandToken(List<string> tokens, int index)
         {
-            int i = 0;
-            while (i < tokens.Count)
+            foreach (DictionaryEntry mergePair in _bpe.mergePairs)
             {
-                if (tokens[i] == "<SPACE>")
+                if (mergePair.Value != null && (string)mergePair.Value == tokens[index])
                 {
-                    tokens[i] = " ";
-                }
-                else if (tokens[i] == "<UNK>")
-                {
-                    tokens[i] = "";  
-                }
-                else if (tokens[i] == "<NEWLINE>")
-                {
-                    tokens[i] = "\n";  
-                }
-                else
-                {
-                    bool foundPair = false;
-                    foreach (DictionaryEntry de in mergePairs)
+                    string originalPair = (string)mergePair.Key;
+                    if (!string.IsNullOrEmpty(originalPair))
                     {
-                        if ((string)de.Value == tokens[i])
-                        {
-                            string originalPair = (string)de.Key;
-                            tokens[i] = originalPair[0].ToString();
-                            tokens.Insert(i + 1, originalPair.Substring(1));
-                            i += 2;
-                            foundPair = true;
-                            break;
-                        }
-                    }
-
-                    if (!foundPair)
-                    {
-                        i++;
+                        tokens[index] = originalPair[0].ToString();
+                        tokens.Insert(index + 1, originalPair.Substring(1));
+                        return index + 2; 
                     }
                 }
             }
-
-            return tokens;
+            return index + 1;
         }
     }
 }

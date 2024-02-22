@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,92 +7,93 @@ namespace BytePairEncoding
 {
     public class TokenizeandBin
     {
-        public BPE bpe;
-        public Encoder encoder;
-        public List<KeyValuePair<string, int>> token2id;
-        public OrderedDictionary vocab;
-        public OrderedDictionary mergePairs;
-        public int tokenCount;
+        public BPE _bpe;
 
         public TokenizeandBin(BPE bpe)
         {
-            this.bpe = bpe;
-            this.token2id = bpe.token2id;
-            this.vocab = bpe.vocab;
-            this.mergePairs = bpe.mergePairs;
-            this.tokenCount = bpe.tokenCount;
-            this.encoder = new Encoder(bpe);
+            _bpe = bpe;
+
         }
 
-        public async Task<int[]> ProcessFileAsync(string fileName, double trainRatio = 0.9, IProgress<int>? progress = null)
+        public async Task<int[]> TokenizeNBinTxTFile(string fileName, double trainRatio = 0.9, IProgress<int>? progress = null)
         {
-            string text = await File.ReadAllTextAsync(fileName);
-            int[] encodedWords = await encoder.EncodeAsync(text);
-            SplitWordsIntoTrainAndVal(encodedWords, trainRatio, out var trainWords, out var valWords);
-            await AdjustWordsToChunkSizeAndWriteToFileAsync("train.bin", trainWords, progress!);
-            await AdjustWordsToChunkSizeAndWriteToFileAsync("val.bin", valWords, progress!);
-
-            return valWords;
-        }
-
-        private void SplitWordsIntoTrainAndVal(int[] encodedWords, double trainRatio, out int[] trainWords, out int[] valWords)
-        {
-            int splitIndex = (int)(encodedWords.Length * trainRatio);
-            trainWords = encodedWords.Take(splitIndex).ToArray();
-            valWords = encodedWords.Skip(splitIndex).ToArray();
-        }
-
-        private async Task AdjustWordsToChunkSizeAndWriteToFileAsync(string fileName, int[] words, IProgress<int> progress)
-        {
-            int chunkSize = 2048;
-            int numTokens = (int)Math.Ceiling(words.Length / (double)chunkSize) * chunkSize;
-            int[] adjustedWords = AdjustTokensToChunkSize(words, chunkSize, numTokens);
-
-            int progressPercentage = 0;
-            for (int i = 0; i < adjustedWords.Length; i += chunkSize)
+            using (var reader = new StreamReader(fileName, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: false)))
             {
-                int[] chunk = adjustedWords.Skip(i).Take(chunkSize).ToArray();
-                WriteIdsToBinFile(fileName, chunk);
+                string text = await reader.ReadToEndAsync();
 
-                progressPercentage = (int)((i + chunkSize) / (double)adjustedWords.Length * 100);
-                progress?.Report(progressPercentage);
+                int[] encodedWords = _bpe.encoder.Encode(text);
 
-                // Introduce a delay to simulate gradual progress
-                await Task.Delay(1); // Adjust the delay duration as needed
+                TextManipulation.SplitWordsIntoTrainAndVal(encodedWords, trainRatio, out var trainWords, out var valWords);
+
+                var writeTasks = new Task[]
+                {
+            WriteIdsToBinFileAsync("train.bin", trainWords),
+            WriteIdsToBinFileAsync("val.bin", valWords)
+                };
+                await Task.WhenAll(writeTasks);
+
+                progress?.Report(100);
+
+                return valWords;
             }
-
-            progress?.Report(100);
         }
 
-        private int[] AdjustTokensToChunkSize(int[] tokens, int chunkSize, int numTokens)
+        private static async Task WriteIdsToBinFileAsync(string fileName, int[] ids)
         {
-            if (tokens.Length >= numTokens)
-            {
-                return tokens;
-            }
-
-            int[] adjustedTokens = new int[numTokens];
-            Array.Copy(tokens, adjustedTokens, tokens.Length);
-
-            int paddingToken = token2id.Single(kv => kv.Key == "<PAD>").Value;
-
-            for (int i = tokens.Length; i < numTokens; i++)
-            {
-                adjustedTokens[i] = paddingToken;
-            }
-
-            return adjustedTokens;
-        }
-
-        private void WriteIdsToBinFile(string fileName, int[] ids)
-        {
-            using (BinaryWriter writer = new BinaryWriter(File.OpenWrite(fileName)))
+            using (FileStream fs = new (fileName, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
+            using (BinaryWriter writer = new (fs))
             {
                 foreach (int id in ids)
                 {
                     writer.Write(id);
                 }
+                await fs.FlushAsync();
             }
         }
+
+        public static async Task WriteIdsToBinFileWithPaddingAsync(string fileName, int[] ids, int chunkSizeInBytes = 4096, int paddingToken = -1)
+        {
+            int tokenSizeInBytes = 4; // Size of int in bytes
+            int tokensPerChunk = chunkSizeInBytes / tokenSizeInBytes;
+            int totalTokens = ids.Length;
+            int totalFullChunks = totalTokens / tokensPerChunk;
+            int remainingTokens = totalTokens % tokensPerChunk;
+
+            FileStream stream = new (fileName, FileMode.Create, FileAccess.Write);
+            using (BinaryWriter writer = new (stream))
+            {
+                // Write full chunks
+                for (int i = 0; i < totalFullChunks; i++)
+                {
+                    for (int j = 0; j < tokensPerChunk; j++)
+                    {
+                        int tokenIndex = i * tokensPerChunk + j;
+                        writer.Write(ids[tokenIndex]);
+                    }
+                }
+
+                // Write remaining tokens, if any
+                if (remainingTokens > 0)
+                {
+                    for (int i = 0; i < remainingTokens; i++)
+                    {
+                        int tokenIndex = totalFullChunks * tokensPerChunk + i;
+                        writer.Write(ids[tokenIndex]);
+                    }
+
+                    // Pad the last chunk
+                    int paddingTokensNeeded = tokensPerChunk - remainingTokens;
+                    for (int i = 0; i < paddingTokensNeeded; i++)
+                    {
+                        writer.Write(paddingToken);
+                    }
+                }
+            }
+
+            await stream.FlushAsync();
+            stream.Close();
+        }
+
+
     }
 }

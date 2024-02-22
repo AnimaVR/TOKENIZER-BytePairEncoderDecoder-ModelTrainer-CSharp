@@ -1,40 +1,29 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BytePairEncoding
 {
     public class Encoder
     {
-        public BPE bpe;
-        public List<KeyValuePair<string, int>> token2id;
-        public OrderedDictionary vocab;
-        public OrderedDictionary mergePairs;
-        public int tokenCount;
+        public BPE _bpe;
+
 
         public Encoder(BPE bpe)
         {
-            this.bpe = bpe;
-            this.token2id = bpe.token2id;
-            this.vocab = bpe.vocab;
-            this.mergePairs = bpe.mergePairs;
-            this.tokenCount = bpe.tokenCount;
+            _bpe = bpe;
+            
         }
 
-        public async Task<int[]> EncodeAsync(string text)
+        public int[] Encode(string text)
         {
             string[] words = text.Split(' ');
 
-            List<int> encodedTokens = new List<int>();
+            List<int> encodedTokens = new ();
 
             foreach (var word in words)
             {
-                List<int> wordTokens = await Task.Run(() => ProcessWord(word));
+                List<int> wordTokens = ProcessWord(word);
                 encodedTokens.AddRange(wordTokens);
                 AddSpaceToken(encodedTokens);
             }
@@ -44,40 +33,67 @@ namespace BytePairEncoding
             return encodedTokens.ToArray();
         }
 
+
         private List<int> ProcessWord(string word)
         {
             List<string> wordList = word.Select(ch => ch.ToString()).ToList();
-            List<int> encodedTokens = new List<int>();
+            List<int> encodedTokens = new ();
 
             string wordJoined = string.Join("", wordList);
 
             for (int i = 0; i < wordList.Count; i++)
             {
                 var (bestToken, bestLength) = FindBestToken(wordJoined, i);
+
                 HandleSpecialTokens(ref bestToken);
                 ReplaceUnknownToken(bestToken);
-                encodedTokens.Add(token2id.Single(kv => kv.Key == bestToken).Value);
+
+                int tokenValue = _bpe.token2id.FirstOrDefault(kv => kv.Key == bestToken).Value;
+                encodedTokens.Add(tokenValue);
+
                 i += bestLength - 1;
             }
 
             return encodedTokens;
         }
 
+        private void AddSpaceToken(List<int> encodedTokens)
+        {
+            var spaceTokenValue = _bpe.token2id.FirstOrDefault(kv => kv.Key == "<SPACE>").Value;
+            if (spaceTokenValue != default)
+            {
+                encodedTokens.Add(spaceTokenValue);
+            }
+        }
+
+        private void RemoveTrailingSpace(List<int> encodedTokens)
+        {
+            var spaceTokenValue = _bpe.token2id.FirstOrDefault(kv => kv.Key == "<SPACE>").Value;
+            if (encodedTokens.Count > 0 && encodedTokens[^1] == spaceTokenValue)
+            {
+                encodedTokens.RemoveAt(encodedTokens.Count - 1);
+            }
+        }
+
+
         private (string, int) FindBestToken(string wordJoined, int startIdx)
         {
             string bestToken = wordJoined[startIdx].ToString();
             int bestLength = 1;
 
-            foreach (DictionaryEntry pair in mergePairs)
+            foreach (DictionaryEntry pair in _bpe.mergePairs)
             {
-                string key = pair.Key.ToString();
+
+                var key = pair.Key as string; 
+                if (key == null) continue; 
+
                 if (key.Length > bestLength && startIdx + key.Length <= wordJoined.Length)
                 {
                     string substring = wordJoined.Substring(startIdx, key.Length);
                     if (substring == key)
                     {
                         bestLength = key.Length;
-                        bestToken = pair.Value?.ToString() ?? "";
+                        bestToken = pair.Value as string ?? ""; 
                     }
                 }
             }
@@ -85,7 +101,8 @@ namespace BytePairEncoding
             return (bestToken, bestLength);
         }
 
-        private void HandleSpecialTokens(ref string token)
+
+        private static void HandleSpecialTokens(ref string token)
         {
             if (token == "\n")
             {
@@ -95,26 +112,13 @@ namespace BytePairEncoding
 
         private void ReplaceUnknownToken(string token)
         {
-            if (!token2id.Any(kv => kv.Key == token))
+            if (!_bpe.token2id.Any(kv => kv.Key == token))
             {
-                token2id.Add(new KeyValuePair<string, int>(token, token2id.Single(kv => kv.Key == "<UNK>").Value));
+                var unkTokenValue = _bpe.token2id.FirstOrDefault(kv => kv.Key == "<UNK>").Value;
+
+                _bpe.token2id.Add(new KeyValuePair<string, int>(token, unkTokenValue));
             }
         }
 
-        private void AddSpaceToken(List<int> encodedTokens)
-        {
-            if (token2id.Any(kv => kv.Key == "<SPACE>"))
-            {
-                encodedTokens.Add(token2id.Single(kv => kv.Key == "<SPACE>").Value);
-            }
-        }
-
-        private void RemoveTrailingSpace(List<int> encodedTokens)
-        {
-            if (encodedTokens.Count > 0 && token2id.Any(kv => kv.Key == "<SPACE>") && encodedTokens[^1] == token2id.Single(kv => kv.Key == "<SPACE>").Value)
-            {
-                encodedTokens.RemoveAt(encodedTokens.Count - 1);
-            }
-        }
     }
 }

@@ -7,40 +7,45 @@ namespace BytePairEncoding
 {
     public partial class MainWindow : Window
     {
-        BPE bpe;
-        Encoder encoder;
-        Decoder decoder;
-        TokenizeandBin tokenizeandbin;
+        private string lastEncodedText = "";
+
+
+        readonly BPE bpe;
+
         private int[] encodedIds = Array.Empty<int>();
-        Train train;
 
         public MainWindow()
         {
             InitializeComponent();
-            bpe = new BPE();
-            encoder = new Encoder(bpe);
-            decoder = new Decoder(bpe);
-            tokenizeandbin = new TokenizeandBin(bpe);
-            train = new Train(bpe);
-        }
 
+            bpe = new BPE();
+            
+            LoadModelStart();
+        }
 
         private async void startTrainingButton_Click(object sender, RoutedEventArgs e)
         {
             startButton.IsEnabled = false;
+
             vocabSizeTextBlock.Text = "Training the model, please wait";
+
             var progress = new Progress<int>(value =>
             {
                progressBar.Value = value;
             });
-            await train.TrainAsync("input.txt", 2, 0, progress);
+
+            await bpe.Train("formatted_conversations.txt", 1000, 0, progress);
+
             vocabSizeTextBlock.Text = "Training complete, vocabulary size of model = " + bpe.GetVocabSize().ToString() + "+1 for the end of line spaces";
+
             startButton.IsEnabled = true;
         }
 
-        private void LoadModelButton_Click(object sender, RoutedEventArgs e)
+
+        private void LoadModelStart()
         {
             string modelPath = "model.txt";
+
             if (File.Exists(modelPath))
             {
                 bpe.LoadModel(modelPath);
@@ -52,42 +57,60 @@ namespace BytePairEncoding
             }
         }
 
-
+        private void LoadModelButton_Click(object sender, RoutedEventArgs e)
+        {
+            LoadModelStart();
+        }
 
         private async void TokenizeData_Click(object sender, RoutedEventArgs e)
         {
             CreateTrainValBins.IsEnabled = false;
+
             vocabSizeTextBlock.Text = "Tokenising and saving training and validation data to bins";
-            string fileName = "input.txt";
-            Progress<int> progress = new Progress<int>(percentage =>
+
+            string fileName = "formatted_conversations.txt";
+
+            Progress<int> progress = new (percentage =>
             {
                 progressBar.Value = percentage;
             });
-            int[] valIds = await tokenizeandbin.ProcessFileAsync(fileName, 0.9, progress);
+
+            int[] valIds = await bpe.TokenizeAndBinTextFile(fileName, 0.9, progress);
+
             string valBinContent = string.Join(" ", valIds);
+
             valBinTextBlock.Text = valBinContent;
+
             vocabSizeTextBlock.Text = "Tokenisation and bin saving complete";
+
             CreateTrainValBins.IsEnabled = true;
         }
 
         private void sampleButton_Click(object sender, RoutedEventArgs e)
         {
             byte[] trainBytes = File.ReadAllBytes("val.bin");
+
             int[] trainIds = new int[trainBytes.Length / sizeof(int)];
+
             Buffer.BlockCopy(trainBytes, 0, trainIds, 0, trainBytes.Length);
+
             int blockSize = 4096;
+
             int[] blockOfIds = trainIds.Take(blockSize).ToArray();
-            string decodedText = decoder.Decode(blockOfIds);
+
+            string decodedText = bpe.Decode(blockOfIds);
+
             valBinTextBlock.Text = decodedText;
         }
 
-
-
-        private async void encodeButton_Click(object sender, RoutedEventArgs e)
+        private void encodeButton_Click(object sender, RoutedEventArgs e)
         {
             string inputText = inputTextBox.Text;
-            encodedIds = await encoder.EncodeAsync(inputText);
+
+            encodedIds = bpe.Encode(inputText);
+
             string encodedText = string.Join(" ", encodedIds);
+
             encodedTextBlock.Text = encodedText;
         }
 
@@ -95,12 +118,26 @@ namespace BytePairEncoding
         {
             if (encodedIds != null)
             {
-                string decodedText = decoder.Decode(encodedIds);
+                string decodedText = bpe.Decode(encodedIds);
                 decodedTextBlock.Text = decodedText;
             }
             else
             {
                 decodedTextBlock.Text = "No encoded text to decode.";
+            }
+        }
+
+        private void inputTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            string currentInputText = inputTextBox.Text.Trim();
+
+            if (!currentInputText.Equals(lastEncodedText, StringComparison.Ordinal))
+            {
+                encodeButton_Click(sender, e);
+
+                lastEncodedText = currentInputText;
+
+                decodeButton_Click(sender, e);
             }
         }
 
