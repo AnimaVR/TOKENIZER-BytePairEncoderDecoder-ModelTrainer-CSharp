@@ -8,8 +8,9 @@ Sticks with UTF-8 thoughout, counts spaces as a token. More work to be done to h
 1. Take some .txt
 2. Train the model on it
 3. Use model to encode decode text
-4. Profit
+4. Tokenise and .bin a txt file in UTF-8 - pad incomplete chunks to train a model
 
-just a start, needs some work but is a working example with shoddy ui that trains on input.txt and saves model.txt that you can use to encode and decode tokens.
+needs some work but is a working example with shoddy ui that trains on input.txt and saves model.txt that you can use to encode and decode tokens.
 
 Hope it helps someone understand bpe a bit better.
+
