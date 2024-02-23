@@ -1,16 +1,18 @@
-﻿using System.Collections.Generic;
+﻿using BytePairEncoding.Utilities;
+using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 
 namespace BytePairEncoding
 {
     public class ModelLoader
     {
+        public LineProcessor _processline;
         private readonly BPE _bpe;
         public ModelLoader(BPE bpe)
         {
             _bpe = bpe;
+            _processline = new LineProcessor(_bpe);
         }
 
         public void ResetModelInMemoryToZeroNInitialiseSpecialTokens()
@@ -53,66 +55,18 @@ namespace BytePairEncoding
                     }
                     else
                     {
-                        ProcessLine(section, line);
+                      _processline.ProcessLine(section, line);
                     }
                 }
             }
         }
 
-        private void ProcessLine(string section, string line)
+        public void LoadModelStart()
         {
-            switch (section)
-            {
-                case "Vocabulary":
-                    ProcessVocabularyLine(line);
-                    break;
-                case "MergePairs":
-                    ProcessMergePairsLine(line);
-                    break;
-                case "TokenToIdMappings":
-                    ProcessTokenToIdMappingsLine(line);
-                    break;
-            }
+            string modelPath = "model.txt";
+
+             LoadModel(modelPath);
         }
 
-        private void ProcessVocabularyLine(string line)
-        {
-            string[] parts = line.Split('¦');
-            if (parts.Length == 2 && int.TryParse(parts[1], out int count))
-            {
-                if (!_bpe.vocab.Contains(parts[0]))
-                {
-                    _bpe.vocab.Add(parts[0], count);
-                }
-            }
-        }
-
-        private void ProcessMergePairsLine(string line)
-        {
-            string[] parts = line.Split('¦');
-            if (parts.Length == 2)
-            {
-                if (!_bpe.mergePairs.Contains(parts[0]))
-                {
-                    _bpe.mergePairs.Add(parts[0], parts[1]);
-                }
-            }
-        }
-
-        private void ProcessTokenToIdMappingsLine(string line)
-        {
-            string[] parts = line.Split('¦');
-            if (parts.Length == 2 && int.TryParse(parts[1], out int id))
-            {
-                if (!_bpe.token2id.Any(kv => kv.Key == parts[0]))
-                {
-                    _bpe.token2id.Add(new KeyValuePair<string, int>(parts[0], id));
-                    if (id > _bpe.tokenCount)
-                    {
-                        _bpe.tokenCount = id + 1;
-                    }
-                }
-            }
-        }
     }
 }

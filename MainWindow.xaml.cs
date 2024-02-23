@@ -8,8 +8,6 @@ namespace BytePairEncoding
     public partial class MainWindow : Window
     {
         private string lastEncodedText = "";
-
-
         readonly BPE bpe;
 
         private int[] encodedIds = Array.Empty<int>();
@@ -19,8 +17,8 @@ namespace BytePairEncoding
             InitializeComponent();
 
             bpe = new BPE();
-            
-            LoadModelStart();
+
+            bpe.loader.LoadModelStart();
         }
 
         private async void startTrainingButton_Click(object sender, RoutedEventArgs e)
@@ -41,25 +39,9 @@ namespace BytePairEncoding
             startButton.IsEnabled = true;
         }
 
-
-        private void LoadModelStart()
-        {
-            string modelPath = "model.txt";
-
-            if (File.Exists(modelPath))
-            {
-                bpe.LoadModel(modelPath);
-                vocabSizeTextBlock.Text = "Model Loaded";
-            }
-            else
-            {
-                vocabSizeTextBlock.Text = "Model not found, please train one on your data";
-            }
-        }
-
         private void LoadModelButton_Click(object sender, RoutedEventArgs e)
         {
-            LoadModelStart();
+            bpe.loader.LoadModelStart();
         }
 
         private async void TokenizeData_Click(object sender, RoutedEventArgs e)
