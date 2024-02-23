@@ -1,104 +1,103 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace BytePairEncoding;
+namespace BytePairEncoding
+{
 
     public class EncodedWordProcessor
-    { 
-    
-    BPE _bpe;
-
-    public EncodedWordProcessor(BPE bpe)
     {
-        _bpe = bpe;
-    }
-    public List<int> ProcessWord(string word)
-    {
-        List<string> wordList = word.Select(ch => ch.ToString()).ToList();
-        List<int> encodedTokens = new();
+        BPE _bpe;
 
-        string wordJoined = string.Join("", wordList);
-
-        for (int i = 0; i < wordList.Count; i++)
+        public EncodedWordProcessor(BPE bpe)
         {
-            var (bestToken, bestLength) = FindBestToken(wordJoined, i);
-
-            HandleSpecialTokens(ref bestToken);
-            ReplaceUnknownToken(bestToken);
-
-            int tokenValue = _bpe.token2id.FirstOrDefault(kv => kv.Key == bestToken).Value;
-            encodedTokens.Add(tokenValue);
-
-            i += bestLength - 1;
+            _bpe = bpe;
         }
 
-        return encodedTokens;
-    }
-
-    public void AddSpaceToken(List<int> encodedTokens)
-    {
-        var spaceTokenValue = _bpe.token2id.FirstOrDefault(kv => kv.Key == "<SPACE>").Value;
-        if (spaceTokenValue != default)
+        public List<int> ProcessWord(string word)
         {
-            encodedTokens.Add(spaceTokenValue);
-        }
-    }
+            List<string> wordList = word.Select(ch => ch.ToString()).ToList();
+            List<int> encodedTokens = new();
 
-    public void RemoveTrailingSpace(List<int> encodedTokens)
-    {
-        var spaceTokenValue = _bpe.token2id.FirstOrDefault(kv => kv.Key == "<SPACE>").Value;
-        if (encodedTokens.Count > 0 && encodedTokens[^1] == spaceTokenValue)
-        {
-            encodedTokens.RemoveAt(encodedTokens.Count - 1);
-        }
-    }
+            string wordJoined = string.Join("", wordList);
 
-
-    private (string, int) FindBestToken(string wordJoined, int startIdx)
-    {
-        string bestToken = wordJoined[startIdx].ToString();
-        int bestLength = 1;
-
-        foreach (DictionaryEntry pair in _bpe.mergePairs)
-        {
-
-            var key = pair.Key as string;
-            if (key == null) continue;
-
-            if (key.Length > bestLength && startIdx + key.Length <= wordJoined.Length)
+            for (int i = 0; i < wordList.Count; i++)
             {
-                string substring = wordJoined.Substring(startIdx, key.Length);
-                if (substring == key)
-                {
-                    bestLength = key.Length;
-                    bestToken = pair.Value as string ?? "";
-                }
+                var (bestToken, bestLength) = FindBestToken(wordJoined, i);
+
+                HandleSpecialTokens(ref bestToken);
+                ReplaceUnknownToken(bestToken);
+
+                int tokenValue = _bpe.token2id.FirstOrDefault(kv => kv.Key == bestToken).Value;
+                encodedTokens.Add(tokenValue);
+
+                i += bestLength - 1;
+            }
+
+            return encodedTokens;
+        }
+
+        public void AddSpaceToken(List<int> encodedTokens)
+        {
+            var spaceTokenValue = _bpe.token2id.FirstOrDefault(kv => kv.Key == "<SPACE>").Value;
+            if (spaceTokenValue != default)
+            {
+                encodedTokens.Add(spaceTokenValue);
             }
         }
 
-        return (bestToken, bestLength);
-    }
-
-
-    private static void HandleSpecialTokens(ref string token)
-    {
-        if (token == "\n")
+        public void RemoveTrailingSpace(List<int> encodedTokens)
         {
-            token = "<NEWLINE>";
+            var spaceTokenValue = _bpe.token2id.FirstOrDefault(kv => kv.Key == "<SPACE>").Value;
+            if (encodedTokens.Count > 0 && encodedTokens[^1] == spaceTokenValue)
+            {
+                encodedTokens.RemoveAt(encodedTokens.Count - 1);
+            }
         }
-    }
 
-    private void ReplaceUnknownToken(string token)
-    {
-        if (!_bpe.token2id.Any(kv => kv.Key == token))
+
+        private (string, int) FindBestToken(string wordJoined, int startIdx)
         {
-            var unkTokenValue = _bpe.token2id.FirstOrDefault(kv => kv.Key == "<UNK>").Value;
+            string bestToken = wordJoined[startIdx].ToString();
+            int bestLength = 1;
 
-            _bpe.token2id.Add(new KeyValuePair<string, int>(token, unkTokenValue));
+            foreach (DictionaryEntry pair in _bpe.mergePairs)
+            {
+
+                var key = pair.Key as string;
+                if (key == null) continue;
+
+                if (key.Length > bestLength && startIdx + key.Length <= wordJoined.Length)
+                {
+                    string substring = wordJoined.Substring(startIdx, key.Length);
+                    if (substring == key)
+                    {
+                        bestLength = key.Length;
+                        bestToken = pair.Value as string ?? "";
+                    }
+                }
+            }
+
+            return (bestToken, bestLength);
+        }
+
+
+        private static void HandleSpecialTokens(ref string token)
+        {
+            if (token == "\n")
+            {
+                token = "<NEWLINE>";
+            }
+        }
+
+        private void ReplaceUnknownToken(string token)
+        {
+            if (!_bpe.token2id.Any(kv => kv.Key == token))
+            {
+                var unkTokenValue = _bpe.token2id.FirstOrDefault(kv => kv.Key == "<UNK>").Value;
+
+                _bpe.token2id.Add(new KeyValuePair<string, int>(token, unkTokenValue));
+            }
         }
     }
 }
