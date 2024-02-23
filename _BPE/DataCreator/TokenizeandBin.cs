@@ -22,7 +22,7 @@ namespace BytePairEncoding
 
                 int[] encodedWords = _bpe.encoder.Encode(text);
 
-                TextManipulation.SplitWordsIntoTrainAndVal(encodedWords, trainRatio, out var trainWords, out var valWords);
+                TrainNValSplitter.SplitWordsIntoTrainAndVal(encodedWords, trainRatio, out var trainWords, out var valWords);
 
                 var writeTasks = new Task[]
                 {

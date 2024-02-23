@@ -27,14 +27,7 @@ namespace BytePairEncoding
                        .ToList();
         }
 
-        public static void SplitWordsIntoTrainAndVal(int[] encodedWords, double trainRatio, out int[] trainWords, out int[] valWords)
-        {
-            int splitIndex = (int)(encodedWords.Length * trainRatio);
-
-            trainWords = encodedWords.Take(splitIndex).ToArray();
-            valWords = encodedWords.Skip(splitIndex).ToArray();
-        }
-
+        
         public static Dictionary<string, int> AccumulateWordFrequencies(List<List<string>> words)
         {
             var tempVocab = new Dictionary<string, int>();
