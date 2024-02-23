@@ -20,6 +20,7 @@ namespace BytePairEncoding
         public OrderedDictionary vocab = new ();
         public OrderedDictionary mergePairs = new ();
         public int tokenCount = 0;
+
         public BPE()
         {
             loader = new ModelLoader(this);
@@ -31,6 +32,9 @@ namespace BytePairEncoding
             decoder = new Decoder(this);
 
             tokenizeandbin = new TokenizeandBin(this);
+
+            loader.LoadModelStart();
+
         }
 
         public int[] Encode(string text)

@@ -18,7 +18,6 @@ namespace BytePairEncoding
 
             bpe = new BPE();
 
-            bpe.loader.LoadModelStart();
         }
 
         private async void startTrainingButton_Click(object sender, RoutedEventArgs e)
