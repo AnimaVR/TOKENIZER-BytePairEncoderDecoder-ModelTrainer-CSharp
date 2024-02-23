@@ -10,6 +10,7 @@ namespace BytePairEncoding
     public class ModelManipulation
     {
         private readonly BPE _bpe;
+
         public ModelManipulation(BPE bpe)
         {
             _bpe = bpe;

@@ -11,6 +11,7 @@ namespace BytePairEncoding
         public Train(BPE bpe)
         {
             _bpe = bpe;
+
             modelmanip = new ModelManipulation(_bpe);
         }
 

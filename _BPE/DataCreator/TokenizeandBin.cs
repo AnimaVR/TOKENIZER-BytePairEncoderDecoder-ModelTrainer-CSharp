@@ -26,8 +26,8 @@ namespace BytePairEncoding
 
                 var writeTasks = new Task[]
                 {
-            TrainNValSplitter.WriteIdsToBinFileWithPaddingAsync("train.bin", trainWords),
-            TrainNValSplitter.WriteIdsToBinFileWithPaddingAsync("val.bin", valWords)
+            TrainNValSplitter.WriteIdsToBinFileAsync("train.bin", trainWords),
+            TrainNValSplitter.WriteIdsToBinFileAsync("val.bin", valWords)
                 };
                 await Task.WhenAll(writeTasks);
 
