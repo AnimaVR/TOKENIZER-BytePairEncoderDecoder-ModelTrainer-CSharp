@@ -2,7 +2,7 @@
 using System.Linq;
 
 
-namespace BytePairEncoding.Utilities
+namespace BytePairEncoding
 {
     public class LineProcessor
     {
