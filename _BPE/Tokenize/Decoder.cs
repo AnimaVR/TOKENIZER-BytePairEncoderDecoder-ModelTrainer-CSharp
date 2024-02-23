@@ -16,18 +16,13 @@ namespace BytePairEncoding
 
         public string Decode(int[] ids)
         {
-            var tokens = ConvertIdsToTokens(ids);
+            var tokens = ids.Select(id => _bpe.token2id.FirstOrDefault(kv => kv.Value == id).Key ?? "<UNK>").ToList();
 
             tokens = _expander.ExpandTokens(tokens);
 
             tokens.RemoveAll(token => token == "<PAD>");
 
             return string.Join("", tokens);
-        }
-
-        private List<string> ConvertIdsToTokens(int[] ids)
-        {
-            return ids.Select(id => _bpe.token2id.FirstOrDefault(kv => kv.Value == id).Key ?? "<UNK>").ToList();
         }
 
     }

@@ -12,7 +12,6 @@ namespace BytePairEncoding
         public TokenizeandBin(BPE bpe)
         {
             _bpe = bpe;
-
         }
 
         public async Task<int[]> TokenizeNBinTxTFile(string fileName, double trainRatio = 0.9, IProgress<int>? progress = null)
