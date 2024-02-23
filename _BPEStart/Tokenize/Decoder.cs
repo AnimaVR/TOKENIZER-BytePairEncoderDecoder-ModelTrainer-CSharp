@@ -6,7 +6,7 @@ namespace BytePairEncoding
     public class Decoder
     {
         private readonly BPE _bpe;
-        DecodedTokenExpander _expander;
+        private readonly DecodedTokenExpander _expander;
 
         public Decoder(BPE bpe)
         {

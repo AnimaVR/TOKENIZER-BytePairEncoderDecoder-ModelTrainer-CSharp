@@ -5,8 +5,8 @@ using System.Collections.Generic;
 namespace BytePairEncoding
 {
     public class DecodedTokenExpander
-    { 
-        BPE _bpe;
+    {
+        private readonly BPE _bpe;
         public DecodedTokenExpander(BPE bpe)
         {
             _bpe = bpe;

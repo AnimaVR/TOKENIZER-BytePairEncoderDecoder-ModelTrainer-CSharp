@@ -6,7 +6,8 @@ namespace BytePairEncoding
     public class Train
     {
         public BPE _bpe;
-        ModelManipulation modelmanip;
+        private readonly ModelManipulation modelmanip;
+
         public Train(BPE bpe)
         {
             _bpe = bpe;

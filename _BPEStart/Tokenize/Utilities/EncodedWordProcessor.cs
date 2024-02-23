@@ -7,7 +7,7 @@ namespace BytePairEncoding
 
     public class EncodedWordProcessor
     {
-        BPE _bpe;
+        private readonly BPE _bpe;
 
         public EncodedWordProcessor(BPE bpe)
         {

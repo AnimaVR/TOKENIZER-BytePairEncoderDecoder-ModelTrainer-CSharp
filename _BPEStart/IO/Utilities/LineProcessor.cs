@@ -5,7 +5,7 @@ namespace BytePairEncoding
 {
     public class LineProcessor
     {
-        BPE _bpe;
+        private readonly BPE _bpe;
         public LineProcessor(BPE bpe)
         {
             _bpe = bpe;
