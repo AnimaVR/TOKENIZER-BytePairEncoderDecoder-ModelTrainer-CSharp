@@ -7,11 +7,12 @@ namespace BytePairEncoding
 {
     public class BPE
     {
-        public ModelManipulation modelmanip;
         public Encoder encoder;
         public Decoder decoder;
+
         public TokenizeandBin tokenizeandbin;
         public Train train;
+
         public ModelLoader loader;
         public ModelSaver saver;
 
@@ -23,10 +24,12 @@ namespace BytePairEncoding
         {
             loader = new ModelLoader(this);
             saver = new ModelSaver(this);
-            modelmanip = new ModelManipulation(this);
+
             train = new Train(this);
+
             encoder = new Encoder(this);
             decoder = new Decoder(this);
+
             tokenizeandbin = new TokenizeandBin(this);
         }
 

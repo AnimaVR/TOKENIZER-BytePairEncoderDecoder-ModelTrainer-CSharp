@@ -6,10 +6,11 @@ namespace BytePairEncoding
     public class Train
     {
         public BPE _bpe;
-
+        ModelManipulation modelmanip;
         public Train(BPE bpe)
         {
-            _bpe = bpe;  
+            _bpe = bpe;
+            modelmanip = new ModelManipulation(_bpe);
         }
 
         public async Task TrainingStart(string fileName, int numMerges, int minFrequency, IProgress<int>? progress)
@@ -22,13 +23,13 @@ namespace BytePairEncoding
 
             var tempVocab = TextManipulation.AccumulateWordFrequencies(words);
 
-            _bpe.modelmanip.UpdateMainVocabulary(tempVocab);
+            modelmanip.UpdateMainVocabulary(tempVocab);
 
-            _bpe.modelmanip.RemoveTokensBelowFrequency(minFrequency);
+            modelmanip.RemoveTokensBelowFrequency(minFrequency);
 
-            await _bpe.modelmanip.PerformMerges(words, numMerges, progress);
+            await modelmanip.PerformMerges(words, numMerges, progress);
 
-            _bpe.modelmanip.FinalizeToken2Id();
+            modelmanip.FinalizeToken2Id();
 
             _bpe.saver.SaveModel("model.txt");
         }
