@@ -31,7 +31,7 @@ namespace BytePairEncoding
                progressBar.Value = value;
             });
 
-            await bpe.Train("formatted_conversations.txt", 10, 0, progress);
+            await bpe.Train("formatted_conversations.txt", 10000, 0, progress);
 
             vocabSizeTextBlock.Text = "Training complete, vocabulary size of model = " + bpe.GetVocabSize().ToString() + "+1 for the end of line spaces";
 
